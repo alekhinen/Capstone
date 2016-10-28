@@ -1,6 +1,10 @@
 /*
 Nick Alekhine
 ARTG 4700 - Interaction Team Degree Project
+
+Notes on KinectPV2:
+- Color images always returned in 1920x1080.
+- Everything else (depth, skeleton, IR) always returned in 512x424.
 */
 
 import KinectPV2.KJoint;
@@ -15,7 +19,6 @@ int WIDTH = 1680;
 int HEIGHT = 1050;
 
 void setup() {
-  // native is 1920x1080. Resizing causes joint coordinate mismatch (need to manually rescale)
   size(1680, 1050, P3D);
 
   kinect = new KinectPV2(this);
@@ -31,7 +34,7 @@ void draw() {
   
   image(kinect.getDepthImage(), 0, 0);
 
-  //values for [0 - 256] strip in a 512x424 array.
+  //values for [0 - 4500] strip in a 512x424 array.
   rawDepth = kinect.getRawDepthData();
   System.out.println(rawDepth.length);
 

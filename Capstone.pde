@@ -1,5 +1,3 @@
-import KinectPV2.*;
-
 /*
 Nick Alekhine
 ARTG 4700 - Interaction Team Degree Project
@@ -11,6 +9,10 @@ import KinectPV2.*;
 KinectPV2 kinect;
 
 int [] rawDepth;
+
+// screen properties
+int WIDTH = 1680;
+int HEIGHT = 1050;
 
 void setup() {
   // native is 1920x1080. Resizing causes joint coordinate mismatch (need to manually rescale)
@@ -26,9 +28,12 @@ void setup() {
 
 void draw() {
   background(0);
+  
+  image(kinect.getDepthImage(), 0, 0);
 
-  //values for [0 - 256] strip
+  //values for [0 - 256] strip in a 512x424 array.
   rawDepth = kinect.getRawDepthData();
+  System.out.println(rawDepth.length);
 
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonDepthMap();
 
@@ -57,12 +62,20 @@ void drawDepthFromJoint(KJoint joint) {
   fill(255, 0, 0);
   int x = Math.round(joint.getX());
   int y = Math.round(joint.getY());
-  int z = rawDepth[x*y];
+  int z = rawDepth[x+(512*y)];
   // joint.getZ() always returns 0.
-  String msg = "(x, y, z): " + joint.getX() + ", " + joint.getY() + ", " + z;
+  String msg = "(x, y, z): " +x + ", " +y + ", " + z;
   textSize(20);
   text(msg, 50, 100);
-  //background(head.getZ() % 255);
+  background(z % 255);
+  
+  noStroke();
+  fill(100, 100, 100);
+  pushMatrix();
+  PVector mappedJoint = mapDepthToScreen(joint); 
+  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
+  ellipse(0, 0, 70, 70);
+  popMatrix();
 }
 
 //draw hand state
@@ -70,9 +83,17 @@ void drawHandState(KJoint joint) {
   noStroke();
   handState(joint.getState());
   pushMatrix();
-  translate(joint.getX(), joint.getY(), joint.getZ());
+  PVector mappedJoint = mapDepthToScreen(joint); 
+  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
   ellipse(0, 0, 70, 70);
   popMatrix();
+}
+
+PVector mapDepthToScreen(KJoint joint) {
+  int x = Math.round(map(joint.getX(), 0, 512, 0, WIDTH));
+  int y = Math.round(map(joint.getY(), 0, 512, 0, HEIGHT));
+  int z = Math.round(joint.getZ());
+  return new PVector(x, y, z);
 }
 
 /*

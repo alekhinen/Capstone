@@ -19,6 +19,8 @@ OscP5 oscP5;
 NetAddress myRemoteLocation;
 
 int [] rawDepth;
+PImage imgColor;
+
 
 // screen properties
 int WIDTH = 1680;
@@ -30,7 +32,9 @@ void setup() {
   kinect = new KinectPV2(this);
 
   kinect.enableDepthImg(true);
+  kinect.enableColorImg(true);
   kinect.enableSkeletonDepthMap(true);
+
 
   kinect.init();
   
@@ -47,6 +51,7 @@ void draw() {
 
   //values for [0 - 4500] strip in a 512x424 array.
   rawDepth = kinect.getRawDepthData();
+  imgColor = kinect.getColorImage();
 
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonDepthMap();
 

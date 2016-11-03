@@ -10,7 +10,13 @@ Notes on KinectPV2:
 import KinectPV2.KJoint;
 import KinectPV2.*;
 
+import oscP5.*;
+import netP5.*;
+
 KinectPV2 kinect;
+
+OscP5 oscP5;
+NetAddress myRemoteLocation;
 
 int [] rawDepth;
 
@@ -27,6 +33,11 @@ void setup() {
   kinect.enableSkeletonDepthMap(true);
 
   kinect.init();
+  
+  /* start oscP5, listening for incoming messages at port 8000 */
+  oscP5 = new OscP5(this,12000);
+  
+  myRemoteLocation = new NetAddress("10.0.0.161",8000);
 }
 
 void draw() {
@@ -61,6 +72,16 @@ void draw() {
   text(frameRate, 50, 50);
 }
 
+void sendMessage(int depth) {
+  /* in the following different ways of creating osc messages are shown by example */
+  OscMessage myMessage = new OscMessage("/1/note");
+  
+  myMessage.add(depth); /* add an int to the osc message */
+
+  /* send the message */
+  oscP5.send(myMessage, myRemoteLocation); 
+}
+
 void drawDepthFromJoint(KJoint joint) {
   fill(255, 0, 0);
   int x = Math.round(joint.getX());
@@ -71,7 +92,7 @@ void drawDepthFromJoint(KJoint joint) {
   textSize(20);
   text(msg, 50, 100);
   background(z % 255);
-  
+  sendMessage(z);
   noStroke();
   fill(100, 100, 100);
   pushMatrix();

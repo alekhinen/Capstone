@@ -47,7 +47,6 @@ void draw() {
 
   //values for [0 - 4500] strip in a 512x424 array.
   rawDepth = kinect.getRawDepthData();
-  System.out.println(rawDepth.length);
 
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonDepthMap();
 
@@ -84,8 +83,10 @@ void sendMessage(int depth) {
 
 void drawDepthFromJoint(KJoint joint) {
   fill(255, 0, 0);
-  int x = Math.round(joint.getX());
-  int y = Math.round(joint.getY());
+  int x = Math.min(Math.max(Math.round(joint.getX()), 0), 512);
+  int y = Math.min(Math.max(Math.round(joint.getY()), 0), 424);
+  // x, y coordinates can go negative. workaround is to 
+  // use the max of either 0 or the coordinate value.
   int z = rawDepth[x+(512*y)];
   // joint.getZ() always returns 0.
   String msg = "(x, y, z): " +x + ", " +y + ", " + z;

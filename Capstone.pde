@@ -33,7 +33,7 @@ void setup() {
 
   kinect.enableDepthImg(true);
   kinect.enableColorImg(true);
-  kinect.enableSkeletonDepthMap(true);
+  kinect.enableSkeletonColorMap(true);
 
 
   kinect.init();
@@ -53,7 +53,7 @@ void draw() {
   rawDepth = kinect.getRawDepthData();
   imgColor = kinect.getColorImage();
 
-  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonDepthMap();
+  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   //individual JOINTS
   for (int i = 0; i < skeletonArray.size(); i++) {
@@ -65,7 +65,7 @@ void draw() {
       fill(col);
       stroke(col);
 
-      drawDepthFromJoint(joints[KinectPV2.JointType_Head]);
+      drawDepthFromJoint(joints[KinectPV2.JointType_SpineMid]);
       //draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
       drawHandState(joints[KinectPV2.JointType_HandLeft]);
@@ -88,20 +88,26 @@ void sendMessage(int depth) {
 
 void drawDepthFromJoint(KJoint joint) {
   fill(255, 0, 0);
-  int x = Math.min(Math.max(Math.round(joint.getX()), 0), 512);
-  int y = Math.min(Math.max(Math.round(joint.getY()), 0), 424);
+  // map coordinate to get depth
+  //int x = Math.min(Math.max(Math.round(joint.getX()), 0), 512);
+  int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
+  int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 424);
   // x, y coordinates can go negative. workaround is to 
   // use the max of either 0 or the coordinate value.
   int z = rawDepth[x+(512*y)];
+  
+  background(map(z, 0, 4500, 0, 255));
+  
   // joint.getZ() always returns 0.
   String msg = "(x, y, z): " +x + ", " +y + ", " + z;
   textSize(20);
   text(msg, 50, 100);
-  background(z % 255);
-  sendMessage(z);
+  //sendMessage(z);
   noStroke();
   fill(100, 100, 100);
   pushMatrix();
+  
+  // draws the circle at the head position.
   PVector mappedJoint = mapDepthToScreen(joint); 
   translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
   ellipse(0, 0, 70, 70);
@@ -120,8 +126,8 @@ void drawHandState(KJoint joint) {
 }
 
 PVector mapDepthToScreen(KJoint joint) {
-  int x = Math.round(map(joint.getX(), 0, 512, 0, WIDTH));
-  int y = Math.round(map(joint.getY(), 0, 512, 0, HEIGHT));
+  int x = Math.round(map(joint.getX(), 0, 1920, 0, WIDTH));
+  int y = Math.round(map(joint.getY(), 0, 1080, 0, HEIGHT));
   int z = Math.round(joint.getZ());
   return new PVector(x, y, z);
 }

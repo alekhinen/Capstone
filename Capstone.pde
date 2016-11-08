@@ -21,7 +21,6 @@ NetAddress myRemoteLocation;
 int [] rawDepth;
 PImage imgColor;
 
-
 // screen properties
 int WIDTH = 1680;
 int HEIGHT = 1050;
@@ -35,19 +34,19 @@ void setup() {
   kinect.enableColorImg(true);
   kinect.enableSkeletonColorMap(true);
 
-
   kinect.init();
   
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
-  myRemoteLocation = new NetAddress("10.0.0.161",8000);
+  myRemoteLocation = new NetAddress("10.0.0.161", 8000);
 }
 
 void draw() {
   background(0);
   
   image(kinect.getDepthImage(), 0, 0);
+  imgColor = kinect.getColorImage();
 
   //values for [0 - 4500] strip in a 512x424 array.
   rawDepth = kinect.getRawDepthData();
@@ -87,6 +86,8 @@ void sendMessage(int depth) {
 }
 
 void drawDepthFromJoint(KJoint joint) {
+  // TODO: make sure these coordinates don't go outside their bounds (e.g. 0-1920, 0-1080).
+  color jointColor = imgColor.get(Math.round(joint.getX()), Math.round(joint.getY()));
   fill(255, 0, 0);
   // map coordinate to get depth
   //int x = Math.min(Math.max(Math.round(joint.getX()), 0), 512);
@@ -104,7 +105,7 @@ void drawDepthFromJoint(KJoint joint) {
   text(msg, 50, 100);
   //sendMessage(z);
   noStroke();
-  fill(100, 100, 100);
+  fill(jointColor);
   pushMatrix();
   
   // draws the circle at the head position.

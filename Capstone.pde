@@ -86,33 +86,70 @@ void sendMessage(int depth) {
 }
 
 void drawDepthFromJoint(KJoint joint) {
-  // TODO: make sure these coordinates don't go outside their bounds (e.g. 0-1920, 0-1080).
-  color jointColor = imgColor.get(Math.round(joint.getX()), Math.round(joint.getY()));
+  color jointColor = getColorInRadius(Math.round(joint.getX()), Math.round(joint.getY()), 15);
   fill(255, 0, 0);
   // map coordinate to get depth
-  //int x = Math.min(Math.max(Math.round(joint.getX()), 0), 512);
   int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
   int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 424);
   // x, y coordinates can go negative. workaround is to 
   // use the max of either 0 or the coordinate value.
+  // joint.getZ() always returns 0 which is why we need the depth value.
   int z = rawDepth[x+(512*y)];
   
+  // map depth value down to [0 - 255]
   background(map(z, 0, 4500, 0, 255));
   
-  // joint.getZ() always returns 0.
-  String msg = "(x, y, z): " +x + ", " +y + ", " + z;
-  textSize(20);
-  text(msg, 50, 100);
+  // TODO: this sends OSC messages to MaxMSP app.
   //sendMessage(z);
   noStroke();
   fill(jointColor);
   pushMatrix();
   
-  // draws the circle at the head position.
+  // draws the circle at the joint position with the joint color.
   PVector mappedJoint = mapDepthToScreen(joint); 
   translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
   ellipse(0, 0, 70, 70);
   popMatrix();
+}
+
+/** 
+ * @description: Gets the average color in a radius for a point from the HD color image.
+ * @returns color
+ */
+color getColorInRadius(int x, int y, int radius) {
+  // Ensure these coordinates don't go outside their bounds (e.g. 0-1920, 0-1080).
+  int lowerX = Math.max((x - radius), 0);
+  int upperX = Math.min((x + radius), 1920);
+  
+  int lowerY = Math.max((y - radius), 0);
+  int upperY = Math.min((y + radius), 1080);
+  
+  int increment = 0;
+  int r = 0;
+  int g = 0;
+  int b = 0;
+  
+  // sum the color values.
+  while (lowerX < upperX) {
+    int newLowerY = lowerY;
+    while (newLowerY < upperY) {
+      color c = imgColor.get(lowerX, newLowerY);
+      r += Math.round(red(c));
+      g += Math.round(green(c));
+      b += Math.round(blue(c));
+      System.out.println(r + " " + g + " " + b);
+      increment += 1;
+      newLowerY += 1;
+    }
+    lowerX += 1;
+  }
+  
+  // divide the sum by the increment to get the average values.
+  r = Math.round(r / increment);
+  g = Math.round(g / increment);
+  b = Math.round(b / increment);
+  
+  return color(r, g, b);
 }
 
 //draw hand state

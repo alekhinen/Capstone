@@ -21,7 +21,6 @@ NetAddress myRemoteLocation;
 int [] rawDepth;
 PImage imgColor;
 
-
 // screen properties
 int WIDTH = 1680;
 int HEIGHT = 1050;
@@ -33,27 +32,27 @@ void setup() {
 
   kinect.enableDepthImg(true);
   kinect.enableColorImg(true);
-  kinect.enableSkeletonDepthMap(true);
-
+  kinect.enableSkeletonColorMap(true);
 
   kinect.init();
   
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
-  myRemoteLocation = new NetAddress("10.0.0.161",8000);
+  myRemoteLocation = new NetAddress("10.0.0.161", 8000);
 }
 
 void draw() {
   background(0);
   
   image(kinect.getDepthImage(), 0, 0);
+  imgColor = kinect.getColorImage();
 
   //values for [0 - 4500] strip in a 512x424 array.
   rawDepth = kinect.getRawDepthData();
   imgColor = kinect.getColorImage();
 
-  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonDepthMap();
+  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   //individual JOINTS
   for (int i = 0; i < skeletonArray.size(); i++) {
@@ -65,7 +64,7 @@ void draw() {
       fill(col);
       stroke(col);
 
-      drawDepthFromJoint(joints[KinectPV2.JointType_Head]);
+      drawDepthFromJoint(joints[KinectPV2.JointType_SpineMid]);
       //draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
       drawHandState(joints[KinectPV2.JointType_HandLeft]);
@@ -87,25 +86,70 @@ void sendMessage(int depth) {
 }
 
 void drawDepthFromJoint(KJoint joint) {
+  color jointColor = getColorInRadius(Math.round(joint.getX()), Math.round(joint.getY()), 15);
   fill(255, 0, 0);
-  int x = Math.min(Math.max(Math.round(joint.getX()), 0), 512);
-  int y = Math.min(Math.max(Math.round(joint.getY()), 0), 424);
+  // map coordinate to get depth
+  int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
+  int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 424);
   // x, y coordinates can go negative. workaround is to 
   // use the max of either 0 or the coordinate value.
+  // joint.getZ() always returns 0 which is why we need the depth value.
   int z = rawDepth[x+(512*y)];
-  // joint.getZ() always returns 0.
-  String msg = "(x, y, z): " +x + ", " +y + ", " + z;
-  textSize(20);
-  text(msg, 50, 100);
-  background(z % 255);
-  sendMessage(z);
+  
+  // map depth value down to [0 - 255]
+  background(map(z, 0, 4500, 0, 255));
+  
+  // TODO: this sends OSC messages to MaxMSP app.
+  //sendMessage(z);
   noStroke();
-  fill(100, 100, 100);
+  fill(jointColor);
   pushMatrix();
+  
+  // draws the circle at the joint position with the joint color.
   PVector mappedJoint = mapDepthToScreen(joint); 
   translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
   ellipse(0, 0, 70, 70);
   popMatrix();
+}
+
+/** 
+ * @description: Gets the average color in a radius for a point from the HD color image.
+ * @returns color
+ */
+color getColorInRadius(int x, int y, int radius) {
+  // Ensure these coordinates don't go outside their bounds (e.g. 0-1920, 0-1080).
+  int lowerX = Math.max((x - radius), 0);
+  int upperX = Math.min((x + radius), 1920);
+  
+  int lowerY = Math.max((y - radius), 0);
+  int upperY = Math.min((y + radius), 1080);
+  
+  int increment = 0;
+  int r = 0;
+  int g = 0;
+  int b = 0;
+  
+  // sum the color values.
+  while (lowerX < upperX) {
+    int newLowerY = lowerY;
+    while (newLowerY < upperY) {
+      color c = imgColor.get(lowerX, newLowerY);
+      r += Math.round(red(c));
+      g += Math.round(green(c));
+      b += Math.round(blue(c));
+      System.out.println(r + " " + g + " " + b);
+      increment += 1;
+      newLowerY += 1;
+    }
+    lowerX += 1;
+  }
+  
+  // divide the sum by the increment to get the average values.
+  r = Math.round(r / increment);
+  g = Math.round(g / increment);
+  b = Math.round(b / increment);
+  
+  return color(r, g, b);
 }
 
 //draw hand state
@@ -120,8 +164,8 @@ void drawHandState(KJoint joint) {
 }
 
 PVector mapDepthToScreen(KJoint joint) {
-  int x = Math.round(map(joint.getX(), 0, 512, 0, WIDTH));
-  int y = Math.round(map(joint.getY(), 0, 512, 0, HEIGHT));
+  int x = Math.round(map(joint.getX(), 0, 1920, 0, WIDTH));
+  int y = Math.round(map(joint.getY(), 0, 1080, 0, HEIGHT));
   int z = Math.round(joint.getZ());
   return new PVector(x, y, z);
 }

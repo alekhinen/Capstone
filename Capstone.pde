@@ -39,7 +39,7 @@ void setup() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
-  myRemoteLocation = new NetAddress("10.0.0.161", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.5", 8000);
 }
 
 void draw() {
@@ -75,14 +75,15 @@ void draw() {
   text(frameRate, 50, 50);
 }
 
-void sendMessage(int depth) {
+void sendMessage(int depth, int x, int y) {
   /* in the following different ways of creating osc messages are shown by example */
-  OscMessage myMessage = new OscMessage("/1/note");
+  OscMessage depthMsg = new OscMessage("/1/depth");
+  depthMsg.add(depth);
+  oscP5.send(depthMsg, myRemoteLocation);
   
-  myMessage.add(depth); /* add an int to the osc message */
-
-  /* send the message */
-  oscP5.send(myMessage, myRemoteLocation); 
+  OscMessage coordMsg = new OscMessage("/1/coord");
+  coordMsg.add(new int [] {x, y});
+  oscP5.send(coordMsg, myRemoteLocation);
 }
 
 void drawDepthFromJoint(KJoint joint) {
@@ -99,8 +100,6 @@ void drawDepthFromJoint(KJoint joint) {
   // map depth value down to [0 - 255]
   background(map(z, 0, 4500, 0, 255));
   
-  // TODO: this sends OSC messages to MaxMSP app.
-  //sendMessage(z);
   noStroke();
   fill(jointColor);
   pushMatrix();
@@ -110,6 +109,9 @@ void drawDepthFromJoint(KJoint joint) {
   translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
   ellipse(0, 0, 70, 70);
   popMatrix();
+  
+  // TODO: this sends OSC messages to MaxMSP app.
+  sendMessage(Math.round(map(z, 0, 4500, 0, 255)), Math.round(mappedJoint.x), Math.round(mappedJoint.y));
 }
 
 /** 

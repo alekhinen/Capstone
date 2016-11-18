@@ -59,7 +59,7 @@ PImage imgColor;
 int WIDTH = 1680;
 int HEIGHT = 1050;
 
-SonicColor [] colors = {
+SonicColor [] sonicColors = {
   new SonicColor("red", color(255, 0, 0)), 
   new SonicColor("green", color(0, 255, 0)), 
   new SonicColor("blue", color(0, 0, 255)), 
@@ -134,6 +134,7 @@ void sendMessage(int depth, int x, int y) {
 
 void drawDepthFromJoint(KJoint joint) {
   color jointColor = getColorInRadius(Math.round(joint.getX()), Math.round(joint.getY()), 15);
+  String name = getClosestNameFromColor(jointColor);
   fill(255, 0, 0);
   // map coordinate to get depth
   int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
@@ -156,9 +157,28 @@ void drawDepthFromJoint(KJoint joint) {
   ellipse(0, 0, 70, 70);
   popMatrix();
   
+  fill(255, 0, 0);
+  text(name, 50, 70);
+  
   // TODO: this sends OSC messages to MaxMSP app.
   sendMessage(Math.round(map(z, 0, 4500, 0, 255)), Math.round(mappedJoint.x), Math.round(mappedJoint.y));
 }
+
+/**
+ * @description: returns the name of the sonic color which is closest to the given color.
+ */
+String getClosestNameFromColor(color c) {
+  String bestName = "";
+  double closestDist = -1;
+  for (SonicColor sColor : sonicColors) {
+    double dist = sColor.euclideanDistance(c);
+    if (closestDist == -1 || dist < closestDist) {
+      closestDist = dist;
+      bestName = sColor.name;
+    }
+  }
+  return bestName;
+};
 
 /** 
  * @description: Gets the average color in a radius for a point from the HD color image.

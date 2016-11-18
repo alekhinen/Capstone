@@ -7,11 +7,45 @@ Notes on KinectPV2:
 - Everything else (depth, skeleton, IR) always returned in 512x424.
 */
 
+// =======
+// Imports
+// =======
+
 import KinectPV2.KJoint;
 import KinectPV2.*;
 
 import oscP5.*;
 import netP5.*;
+
+// =======
+// Classes
+// =======
+
+class SonicColor {
+  
+  String name;
+  color colorValue;
+  
+  SonicColor(String name, color colorValue) {
+    this.name = name;
+    this.colorValue = colorValue;
+  }
+  
+  /** 
+   * @description: calculates the euclidean distance between this color and a given color.
+   */
+  double euclideanDistance(color c) {
+    float deltaR = red(colorValue) - red(c);
+    float deltaG = green(colorValue) - green(c);
+    float deltaB = blue(colorValue) - blue(c);
+    return Math.sqrt(Math.pow(deltaR, 2) + Math.pow(deltaG, 2) + Math.pow(deltaB, 2));
+  }
+
+}
+
+// ================
+// Global Variables
+// ================
 
 KinectPV2 kinect;
 
@@ -24,6 +58,10 @@ PImage imgColor;
 // screen properties
 int WIDTH = 1680;
 int HEIGHT = 1050;
+
+// ================
+// Global Functions
+// ================
 
 void setup() {
   size(1680, 1050, P3D);

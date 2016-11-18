@@ -59,6 +59,14 @@ PImage imgColor;
 int WIDTH = 1680;
 int HEIGHT = 1050;
 
+SonicColor [] colors = {
+  new SonicColor("red", color(255, 0, 0)), 
+  new SonicColor("green", color(0, 255, 0)), 
+  new SonicColor("blue", color(0, 0, 255)), 
+  new SonicColor("white", color(255, 255, 255)), 
+  new SonicColor("black", color(0, 0, 0))
+};
+
 // ================
 // Global Functions
 // ================

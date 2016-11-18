@@ -43,6 +43,20 @@ class SonicColor {
 
 }
 
+class User {
+
+  color cChest;
+  String cChestName;
+  PVector chestPosn;
+  
+  User(color cChest, String cChestName, PVector chestPosn) {
+    this.cChest = cChest;
+    this.cChestName = cChestName;
+    this.chestPosn = chestPosn;
+  }
+
+}
+
 // ================
 // Global Variables
 // ================
@@ -55,10 +69,7 @@ NetAddress myRemoteLocation;
 int [] rawDepth;
 PImage imgColor;
 
-// screen properties
-int WIDTH = 1680;
-int HEIGHT = 1050;
-
+// static list of colors.
 SonicColor [] sonicColors = {
   new SonicColor("red", color(255, 0, 0)), 
   new SonicColor("green", color(0, 255, 0)), 
@@ -67,12 +78,15 @@ SonicColor [] sonicColors = {
   new SonicColor("black", color(0, 0, 0))
 };
 
+// dynamic list of users.
+ArrayList<User> users;
+
 // ================
 // Global Functions
 // ================
 
 void setup() {
-  size(1680, 1050, P3D);
+  size(displayWidth, displayHeight, P3D);
 
   kinect = new KinectPV2(this);
 
@@ -89,29 +103,32 @@ void setup() {
 }
 
 void draw() {
-  background(0);
-  
-  image(kinect.getDepthImage(), 0, 0);
-  imgColor = kinect.getColorImage();
-
-  //values for [0 - 4500] strip in a 512x424 array.
+  // raw depth contains values [0 - 4500]in a one dimensional 512x424 array.
   rawDepth = kinect.getRawDepthData();
+  // color image from the kinect.
   imgColor = kinect.getColorImage();
-
+  // skeletons (aka users)
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  // reset the user list (as people could have entered/left the FOV).
+  users = new ArrayList<User>();
 
-  //individual JOINTS
+  // reset the screen.
+  background(0);
+  // TODO: debug screen (should remove later).
+  image(kinect.getDepthImage(), 0, 0);
+  
   for (int i = 0; i < skeletonArray.size(); i++) {
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
     if (skeleton.isTracked()) {
       KJoint[] joints = skeleton.getJoints();
 
-      color col  = skeleton.getIndexColor();
-      fill(col);
-      stroke(col);
+      User currentUser = generateUser(joints[KinectPV2.JointType_SpineMid]);
+      users.add(currentUser);
+      
+      drawUser(currentUser);
+      sendMessage(currentUser);
 
-      drawDepthFromJoint(joints[KinectPV2.JointType_SpineMid]);
-      //draw different color for each hand state
+      // draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
       drawHandState(joints[KinectPV2.JointType_HandLeft]);
     }
@@ -121,47 +138,63 @@ void draw() {
   text(frameRate, 50, 50);
 }
 
-void sendMessage(int depth, int x, int y) {
-  /* in the following different ways of creating osc messages are shown by example */
-  OscMessage depthMsg = new OscMessage("/1/depth");
-  depthMsg.add(depth);
-  oscP5.send(depthMsg, myRemoteLocation);
-  
-  OscMessage coordMsg = new OscMessage("/1/coord");
-  coordMsg.add(new int [] {x, y});
-  oscP5.send(coordMsg, myRemoteLocation);
-}
-
-void drawDepthFromJoint(KJoint joint) {
-  color jointColor = getColorInRadius(Math.round(joint.getX()), Math.round(joint.getY()), 15);
-  String name = getClosestNameFromColor(jointColor);
-  fill(255, 0, 0);
-  // map coordinate to get depth
-  int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
-  int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 424);
-  // x, y coordinates can go negative. workaround is to 
-  // use the max of either 0 or the coordinate value.
-  // joint.getZ() always returns 0 which is why we need the depth value.
-  int z = rawDepth[x+(512*y)];
-  
-  // map depth value down to [0 - 255]
-  background(map(z, 0, 4500, 0, 255));
-  
+void drawUser(User u) {
   noStroke();
-  fill(jointColor);
-  pushMatrix();
+  fill(u.cChest);
   
-  // draws the circle at the joint position with the joint color.
-  PVector mappedJoint = mapDepthToScreen(joint); 
-  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
+  // draws the depth as a square in the center of the screen.
+  pushMatrix();
+  translate(displayWidth / 2, displayHeight / 2, 0);
+  fill(map(u.chestPosn.z, 0, 4500, 0, 255));
+  rect(0, 0, 50, 50);
+  popMatrix();
+  
+  // draws the chest as a circle with the user's color.
+  pushMatrix();
+  translate(u.chestPosn.x, u.chestPosn.y, 0);
   ellipse(0, 0, 70, 70);
   popMatrix();
   
   fill(255, 0, 0);
-  text(name, 50, 70);
+  text(u.cChestName, 50, 70);
+}
+
+// -------------
+// OSC Messaging
+// -------------
+
+void sendMessage(User u) {
+  /* in the following different ways of creating osc messages are shown by example */
+  OscMessage depthMsg = new OscMessage("/1/depth");
+  depthMsg.add(u.chestPosn.z);
+  oscP5.send(depthMsg, myRemoteLocation);
   
-  // TODO: this sends OSC messages to MaxMSP app.
-  sendMessage(Math.round(map(z, 0, 4500, 0, 255)), Math.round(mappedJoint.x), Math.round(mappedJoint.y));
+  OscMessage coordMsg = new OscMessage("/1/coord");
+  coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y});
+  oscP5.send(coordMsg, myRemoteLocation);
+}
+
+User generateUser(KJoint chest) {
+  color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 15);
+  String colorName = getClosestNameFromColor(jointColor);
+  int z = getDepthFromJoint(chest);
+  PVector mappedJoint = mapDepthToScreen(chest);
+  return new User(jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
+}
+
+/**
+ * @description: 
+ * @returns integer value between [0 - 4500]
+ */
+int getDepthFromJoint(KJoint joint) {
+  // map the (x, y) from joint from color space to depth space.
+  // note 1: this is a rough conversion that does not take into account that the placement
+  //         of the depth sensor and camera sensor are different (so it's not a clean mapping).
+  // note 2: (x, y) can go negative. workaround is to use the max of either 0 or the coordinate value.
+  // note 3: joint.getZ() always returns 0 which is why we need the depth value.
+  int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
+  int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 424); 
+  return rawDepth[x+(512*y)];
 }
 
 /**
@@ -232,8 +265,8 @@ void drawHandState(KJoint joint) {
 }
 
 PVector mapDepthToScreen(KJoint joint) {
-  int x = Math.round(map(joint.getX(), 0, 1920, 0, WIDTH));
-  int y = Math.round(map(joint.getY(), 0, 1080, 0, HEIGHT));
+  int x = Math.round(map(joint.getX(), 0, 1920, 0, displayWidth));
+  int y = Math.round(map(joint.getY(), 0, 1080, 0, displayHeight));
   int z = Math.round(joint.getZ());
   return new PVector(x, y, z);
 }

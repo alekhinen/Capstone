@@ -140,7 +140,6 @@ void draw() {
 
 void drawUser(User u) {
   noStroke();
-  fill(u.cChest);
   
   // draws the depth as a square in the center of the screen.
   pushMatrix();
@@ -152,6 +151,7 @@ void drawUser(User u) {
   // draws the chest as a circle with the user's color.
   pushMatrix();
   translate(u.chestPosn.x, u.chestPosn.y, 0);
+  fill(u.cChest);
   ellipse(0, 0, 70, 70);
   popMatrix();
   
@@ -164,6 +164,8 @@ void drawUser(User u) {
 // -------------
 
 void sendMessage(User u) {
+  // TODO: need to send all the user data over OSC.
+  
   /* in the following different ways of creating osc messages are shown by example */
   OscMessage depthMsg = new OscMessage("/1/depth");
   depthMsg.add(u.chestPosn.z);
@@ -253,7 +255,7 @@ color getColorInRadius(int x, int y, int radius) {
   return color(r, g, b);
 }
 
-//draw hand state
+// draw hand state
 void drawHandState(KJoint joint) {
   noStroke();
   handState(joint.getState());

@@ -85,6 +85,10 @@ ArrayList<User> users;
 // Global Functions
 // ================
 
+// -----
+// Setup 
+// -----
+
 void setup() {
   size(displayWidth, displayHeight, P3D);
 
@@ -101,6 +105,10 @@ void setup() {
   
   myRemoteLocation = new NetAddress("192.168.1.5", 8000);
 }
+
+// ----
+// Draw
+// ----
 
 void draw() {
   // raw depth contains values [0 - 4500]in a one dimensional 512x424 array.
@@ -126,12 +134,16 @@ void draw() {
       users.add(currentUser);
       
       drawUser(currentUser);
-      sendMessage(currentUser);
 
       // draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
       drawHandState(joints[KinectPV2.JointType_HandLeft]);
     }
+  }
+  
+  for (int i = 0; i < users.size(); i++) {
+    User u = users.get(i);
+    sendMessage(u, i);
   }
 
   fill(255, 0, 0);
@@ -159,22 +171,20 @@ void drawUser(User u) {
   text(u.cChestName, 50, 70);
 }
 
-// -------------
-// OSC Messaging
-// -------------
-
-void sendMessage(User u) {
-  // TODO: need to send all the user data over OSC.
-  
-  /* in the following different ways of creating osc messages are shown by example */
-  OscMessage depthMsg = new OscMessage("/1/depth");
-  depthMsg.add(u.chestPosn.z);
-  oscP5.send(depthMsg, myRemoteLocation);
-  
-  OscMessage coordMsg = new OscMessage("/1/coord");
-  coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y});
-  oscP5.send(coordMsg, myRemoteLocation);
+// draw hand state
+void drawHandState(KJoint joint) {
+  noStroke();
+  handState(joint.getState());
+  pushMatrix();
+  PVector mappedJoint = mapDepthToScreen(joint); 
+  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
+  ellipse(0, 0, 70, 70);
+  popMatrix();
 }
+
+// ----------
+// Generators
+// ----------
 
 User generateUser(KJoint chest) {
   color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 15);
@@ -183,6 +193,38 @@ User generateUser(KJoint chest) {
   PVector mappedJoint = mapDepthToScreen(chest);
   return new User(jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
 }
+
+// -------------
+// OSC Messaging
+// -------------
+
+/** 
+ * @description sends the given user's information over OSC.
+ * @arg User u: the user
+ * @arg int id: the unique id of the user to use when sending the OSC message.
+ */
+void sendMessage(User u, int id) {
+  String oscId = "/" + str(id) + "/";
+  
+  // send name of the user's chest color.
+  OscMessage colorName = new OscMessage(oscId + "colorName");
+  colorName.add(u.cChestName);
+  oscP5.send(colorName, myRemoteLocation);
+  
+  // send rgb value of the user's chest color
+  OscMessage rgbColor = new OscMessage(oscId + "rgbColor");
+  rgbColor.add(new float [] {red(u.cChest), green(u.cChest), blue(u.cChest)});
+  oscP5.send(rgbColor, myRemoteLocation);
+  
+  // send the (x, y, z) coord of the user's chest.
+  OscMessage coordMsg = new OscMessage(oscId + "coord");
+  coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y, u.chestPosn.z});
+  oscP5.send(coordMsg, myRemoteLocation);
+}
+
+// -----------------
+// Utility Functions
+// -----------------
 
 /**
  * @description: 
@@ -253,17 +295,6 @@ color getColorInRadius(int x, int y, int radius) {
   b = Math.round(b / increment);
   
   return color(r, g, b);
-}
-
-// draw hand state
-void drawHandState(KJoint joint) {
-  noStroke();
-  handState(joint.getState());
-  pushMatrix();
-  PVector mappedJoint = mapDepthToScreen(joint); 
-  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
-  ellipse(0, 0, 70, 70);
-  popMatrix();
 }
 
 PVector mapDepthToScreen(KJoint joint) {

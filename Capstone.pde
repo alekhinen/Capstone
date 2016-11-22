@@ -128,17 +128,11 @@ void draw() {
 
   // reset the screen.
   background(150);
-  // TODO: debug screen (should remove later).
-  // image(kinect.getDepthImage(), 0, 0);
-  
-  // TODO: when the skeleton list changes in size, user list should be reset?
   
   if (skeletonArray.size() != users.size()) {
     users = new ArrayList<User>();
   }
   
-  // TODO: it seems like the skeletons array pushes a new user to the beginning
-  //       instead of at the end. this has implications with User ids.
   for (int i = 0; i < skeletonArray.size(); i++) {
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
     if (skeleton.isTracked()) {

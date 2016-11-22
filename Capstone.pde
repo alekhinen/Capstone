@@ -48,8 +48,10 @@ class User {
   color cChest;
   String cChestName;
   PVector chestPosn;
+  int id;
   
-  User(color cChest, String cChestName, PVector chestPosn) {
+  User(int id, color cChest, String cChestName, PVector chestPosn) {
+    this.id = id;
     this.cChest = cChest;
     this.cChestName = cChestName;
     this.chestPosn = chestPosn;
@@ -85,6 +87,10 @@ ArrayList<User> users;
 // Global Functions
 // ================
 
+// -----
+// Setup 
+// -----
+
 void setup() {
   size(displayWidth, displayHeight, P3D);
 
@@ -96,11 +102,19 @@ void setup() {
 
   kinect.init();
   
+  // TODO: generate the list once in the beginning and keep it constant. 
+  //       only remove / add if there are new skeletons.
+  users = new ArrayList<User>();
+  
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
-  myRemoteLocation = new NetAddress("192.168.1.5", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.2", 8000);
 }
+
+// ----
+// Draw
+// ----
 
 void draw() {
   // raw depth contains values [0 - 4500]in a one dimensional 512x424 array.
@@ -110,28 +124,58 @@ void draw() {
   // skeletons (aka users)
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
   // reset the user list (as people could have entered/left the FOV).
-  users = new ArrayList<User>();
+  // TODO: generate the list once in the beginning and keep it constant. 
+  //       only remove / add if there are new skeletons.
+  //users = new ArrayList<User>();
 
   // reset the screen.
-  background(0);
+  background(150);
   // TODO: debug screen (should remove later).
-  image(kinect.getDepthImage(), 0, 0);
+  // image(kinect.getDepthImage(), 0, 0);
   
+  // TODO: when the skeleton list changes in size, user list should be reset?
+  
+  if (skeletonArray.size() == 0) {
+    users = new ArrayList<User>();
+  }
+  
+  // TODO: it seems like the skeletons array pushes a new user to the beginning
+  //       instead of at the end. this has implications with User ids.
   for (int i = 0; i < skeletonArray.size(); i++) {
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-    if (skeleton.isTracked()) {
+    if (skeleton.isTracked() && i == 0) {
       KJoint[] joints = skeleton.getJoints();
-
-      User currentUser = generateUser(joints[KinectPV2.JointType_SpineMid]);
-      users.add(currentUser);
       
-      drawUser(currentUser);
-      sendMessage(currentUser);
+      boolean userExists = false;
+      User currentUser;
+      
+      // check to see if the user already exists (by id).
+      for (User u : users) {
+        if (u.id == i) {
+          userExists = true;
+          currentUser = u;
+          updateUser(currentUser, joints[KinectPV2.JointType_SpineMid]);
+          drawUser(currentUser);
+          break;
+        }
+      }
+      
+      // if the user doesn't already exist, generate.
+      if (!userExists) {
+        currentUser = generateUser(joints[KinectPV2.JointType_SpineMid], i);
+        users.add(currentUser);
+        drawUser(currentUser);
+      }
 
       // draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
       drawHandState(joints[KinectPV2.JointType_HandLeft]);
     }
+  }
+  
+  for (int i = 0; i < users.size(); i++) {
+    User u = users.get(i);
+    sendMessage(u, i);
   }
 
   fill(255, 0, 0);
@@ -159,30 +203,72 @@ void drawUser(User u) {
   text(u.cChestName, 50, 70);
 }
 
-// -------------
-// OSC Messaging
-// -------------
-
-void sendMessage(User u) {
-  // TODO: need to send all the user data over OSC.
-  
-  /* in the following different ways of creating osc messages are shown by example */
-  OscMessage depthMsg = new OscMessage("/1/depth");
-  depthMsg.add(u.chestPosn.z);
-  oscP5.send(depthMsg, myRemoteLocation);
-  
-  OscMessage coordMsg = new OscMessage("/1/coord");
-  coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y});
-  oscP5.send(coordMsg, myRemoteLocation);
+// draw hand state
+void drawHandState(KJoint joint) {
+  noStroke();
+  handState(joint.getState());
+  pushMatrix();
+  PVector mappedJoint = mapDepthToScreen(joint); 
+  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
+  ellipse(0, 0, 70, 70);
+  popMatrix();
 }
 
-User generateUser(KJoint chest) {
+// ----------
+// Generators
+// ----------
+
+User generateUser(KJoint chest, int id) {
+  // TODO: should be a static function in User class. 
   color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 15);
   String colorName = getClosestNameFromColor(jointColor);
   int z = getDepthFromJoint(chest);
   PVector mappedJoint = mapDepthToScreen(chest);
-  return new User(jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
+  return new User(id, jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
 }
+
+// --------
+// Mutators
+// --------
+
+void updateUser(User u, KJoint chest) {
+  // TODO: should be moved into User class.
+  int z = getDepthFromJoint(chest);
+  PVector mappedJoint = mapDepthToScreen(chest);
+  u.chestPosn = new PVector(mappedJoint.x, mappedJoint.y, z);
+}
+
+// -------------
+// OSC Messaging
+// -------------
+
+/** 
+ * @description sends the given user's information over OSC.
+ * @arg User u: the user
+ * @arg int id: the unique id of the user to use when sending the OSC message.
+ */
+void sendMessage(User u, int id) {
+  String oscId = "/" + str(id) + "/";
+  
+  // send name of the user's chest color.
+  OscMessage colorName = new OscMessage(oscId + "colorName");
+  colorName.add(u.cChestName);
+  oscP5.send(colorName, myRemoteLocation);
+  
+  // send rgb value of the user's chest color
+  OscMessage rgbColor = new OscMessage(oscId + "rgbColor");
+  rgbColor.add(new float [] {red(u.cChest), green(u.cChest), blue(u.cChest)});
+  oscP5.send(rgbColor, myRemoteLocation);
+  
+  // send the (x, y, z) coord of the user's chest.
+  OscMessage coordMsg = new OscMessage(oscId + "coord");
+  coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y, u.chestPosn.z});
+  oscP5.send(coordMsg, myRemoteLocation);
+}
+
+// -----------------
+// Utility Functions
+// -----------------
 
 /**
  * @description: 
@@ -227,7 +313,7 @@ color getColorInRadius(int x, int y, int radius) {
   int lowerY = Math.max((y - radius), 0);
   int upperY = Math.min((y + radius), 1080);
   
-  int increment = 0;
+  int increment = 1;
   int r = 0;
   int g = 0;
   int b = 0;
@@ -253,17 +339,6 @@ color getColorInRadius(int x, int y, int radius) {
   b = Math.round(b / increment);
   
   return color(r, g, b);
-}
-
-// draw hand state
-void drawHandState(KJoint joint) {
-  noStroke();
-  handState(joint.getState());
-  pushMatrix();
-  PVector mappedJoint = mapDepthToScreen(joint); 
-  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
-  ellipse(0, 0, 70, 70);
-  popMatrix();
 }
 
 PVector mapDepthToScreen(KJoint joint) {

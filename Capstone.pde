@@ -139,6 +139,8 @@ void draw() {
     users = new ArrayList<User>();
   }
   
+  // TODO: it seems like the skeletons array pushes a new user to the beginning
+  //       instead of at the end. this has implications with User ids.
   for (int i = 0; i < skeletonArray.size(); i++) {
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
     if (skeleton.isTracked() && i == 0) {

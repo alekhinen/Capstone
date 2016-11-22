@@ -103,7 +103,7 @@ void setup() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
-  myRemoteLocation = new NetAddress("192.168.1.5", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.2", 8000);
 }
 
 // ----
@@ -118,16 +118,18 @@ void draw() {
   // skeletons (aka users)
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
   // reset the user list (as people could have entered/left the FOV).
+  // TODO: generate the list once in the beginning and keep it constant. 
+  //       only remove / add if there are new skeletons.
   users = new ArrayList<User>();
 
   // reset the screen.
-  background(0);
+  background(150);
   // TODO: debug screen (should remove later).
-  image(kinect.getDepthImage(), 0, 0);
+  // image(kinect.getDepthImage(), 0, 0);
   
   for (int i = 0; i < skeletonArray.size(); i++) {
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-    if (skeleton.isTracked()) {
+    if (skeleton.isTracked() && i == 0) {
       KJoint[] joints = skeleton.getJoints();
 
       User currentUser = generateUser(joints[KinectPV2.JointType_SpineMid]);
@@ -269,7 +271,7 @@ color getColorInRadius(int x, int y, int radius) {
   int lowerY = Math.max((y - radius), 0);
   int upperY = Math.min((y + radius), 1080);
   
-  int increment = 0;
+  int increment = 1;
   int r = 0;
   int g = 0;
   int b = 0;

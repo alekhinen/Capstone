@@ -48,8 +48,10 @@ class User {
   color cChest;
   String cChestName;
   PVector chestPosn;
+  int id;
   
-  User(color cChest, String cChestName, PVector chestPosn) {
+  User(int id, color cChest, String cChestName, PVector chestPosn) {
+    this.id = id;
     this.cChest = cChest;
     this.cChestName = cChestName;
     this.chestPosn = chestPosn;
@@ -100,6 +102,10 @@ void setup() {
 
   kinect.init();
   
+  // TODO: generate the list once in the beginning and keep it constant. 
+  //       only remove / add if there are new skeletons.
+  users = new ArrayList<User>();
+  
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
@@ -120,22 +126,44 @@ void draw() {
   // reset the user list (as people could have entered/left the FOV).
   // TODO: generate the list once in the beginning and keep it constant. 
   //       only remove / add if there are new skeletons.
-  users = new ArrayList<User>();
+  //users = new ArrayList<User>();
 
   // reset the screen.
   background(150);
   // TODO: debug screen (should remove later).
   // image(kinect.getDepthImage(), 0, 0);
   
+  // TODO: when the skeleton list changes in size, user list should be reset?
+  
+  if (skeletonArray.size() == 0) {
+    users = new ArrayList<User>();
+  }
+  
   for (int i = 0; i < skeletonArray.size(); i++) {
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
     if (skeleton.isTracked() && i == 0) {
       KJoint[] joints = skeleton.getJoints();
-
-      User currentUser = generateUser(joints[KinectPV2.JointType_SpineMid]);
-      users.add(currentUser);
       
-      drawUser(currentUser);
+      boolean userExists = false;
+      User currentUser;
+      
+      // check to see if the user already exists (by id).
+      for (User u : users) {
+        if (u.id == i) {
+          userExists = true;
+          currentUser = u;
+          updateUser(currentUser, joints[KinectPV2.JointType_SpineMid]);
+          drawUser(currentUser);
+          break;
+        }
+      }
+      
+      // if the user doesn't already exist, generate.
+      if (!userExists) {
+        currentUser = generateUser(joints[KinectPV2.JointType_SpineMid], i);
+        users.add(currentUser);
+        drawUser(currentUser);
+      }
 
       // draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
@@ -188,12 +216,24 @@ void drawHandState(KJoint joint) {
 // Generators
 // ----------
 
-User generateUser(KJoint chest) {
+User generateUser(KJoint chest, int id) {
+  // TODO: should be a static function in User class. 
   color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 15);
   String colorName = getClosestNameFromColor(jointColor);
   int z = getDepthFromJoint(chest);
   PVector mappedJoint = mapDepthToScreen(chest);
-  return new User(jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
+  return new User(id, jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
+}
+
+// --------
+// Mutators
+// --------
+
+void updateUser(User u, KJoint chest) {
+  // TODO: should be moved into User class.
+  int z = getDepthFromJoint(chest);
+  PVector mappedJoint = mapDepthToScreen(chest);
+  u.chestPosn = new PVector(mappedJoint.x, mappedJoint.y, z);
 }
 
 // -------------

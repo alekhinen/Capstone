@@ -48,11 +48,15 @@ class User {
   color cChest;
   String cChestName;
   PVector chestPosn;
+  PVector lHandPosn;
+  PVector rHandPosn;
   
-  User(color cChest, String cChestName, PVector chestPosn) {
+  User(color cChest, String cChestName, PVector chestPosn, PVector lHandPosn, PVector rHandPosn) {
     this.cChest = cChest;
     this.cChestName = cChestName;
     this.chestPosn = chestPosn;
+    this.lHandPosn = lHandPosn;
+    this.rHandPosn = rHandPosn;
   }
 
 }
@@ -107,7 +111,7 @@ void setup() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
-  myRemoteLocation = new NetAddress("192.168.1.3", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.4", 8000);
 }
 
 // ----
@@ -121,15 +125,13 @@ void draw() {
   imgColor = kinect.getColorImage();
   // skeletons (aka users)
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
-  // reset the user list (as people could have entered/left the FOV).
-  // TODO: generate the list once in the beginning and keep it constant. 
-  //       only remove / add if there are new skeletons.
-  //users = new ArrayList<User>();
 
   // reset the screen.
   background(150);
   
   if (skeletonArray.size() != users.size()) {
+    // TODO: should we be closing all the users out whenever one comes or leaves?
+    closingMessage(users);
     users = new ArrayList<User>();
   }
   
@@ -143,14 +145,19 @@ void draw() {
       
       // if the user doesn't already exist, generate.
       if (!userExists) {
-        currentUser = generateUser(joints[KinectPV2.JointType_SpineMid]);
+        currentUser = generateUser(joints[KinectPV2.JointType_SpineMid],
+                                   joints[KinectPV2.JointType_HandLeft],
+                                   joints[KinectPV2.JointType_HandRight]);
         // add to beginning of list
         users.add(currentUser);
         drawUser(currentUser);
       } else {
         userExists = true;
         currentUser = users.get(i);
-        updateUser(currentUser, joints[KinectPV2.JointType_SpineMid]);
+        updateUser(currentUser, 
+                   joints[KinectPV2.JointType_SpineMid], 
+                   joints[KinectPV2.JointType_HandLeft],
+                   joints[KinectPV2.JointType_HandRight]);
         drawUser(currentUser);
       }
 
@@ -205,24 +212,38 @@ void drawHandState(KJoint joint) {
 // Generators
 // ----------
 
-User generateUser(KJoint chest) {
+User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
   // TODO: should be a static function in User class. 
   color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 5);
   String colorName = getClosestNameFromColor(jointColor);
   int z = getDepthFromJoint(chest);
+  
   PVector mappedJoint = mapDepthToScreen(chest);
-  return new User(jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
+  PVector mappedLeft  = mapDepthToScreen(lHand);
+  PVector mappedRight = mapDepthToScreen(rHand);
+  
+  return new User(jointColor, 
+                  colorName, 
+                  new PVector(mappedJoint.x, mappedJoint.y, z),
+                  mappedLeft,
+                  mappedRight);
 }
 
 // --------
 // Mutators
 // --------
 
-void updateUser(User u, KJoint chest) {
+void updateUser(User u, KJoint chest, KJoint lHand, KJoint rHand) {
   // TODO: should be moved into User class.
   int z = getDepthFromJoint(chest);
+  
   PVector mappedJoint = mapDepthToScreen(chest);
+  PVector mappedLeft  = mapDepthToScreen(lHand);
+  PVector mappedRight = mapDepthToScreen(rHand);
+  
   u.chestPosn = new PVector(mappedJoint.x, mappedJoint.y, z);
+  u.lHandPosn = mappedLeft;
+  u.rHandPosn = mappedRight;
 }
 
 // -------------
@@ -251,6 +272,26 @@ void sendMessage(User u, int id) {
   OscMessage coordMsg = new OscMessage(oscId + "coord");
   coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y, u.chestPosn.z});
   oscP5.send(coordMsg, myRemoteLocation);
+  
+  OscMessage lHandMsg = new OscMessage(oscId + "lHandCoord");
+  lHandMsg.add(new float [] {u.lHandPosn.x, u.lHandPosn.y});
+  oscP5.send(lHandMsg, myRemoteLocation);
+  
+  OscMessage rHandMsg = new OscMessage(oscId + "rHandCoord");
+  rHandMsg.add(new float [] {u.rHandPosn.x, u.rHandPosn.y});
+  oscP5.send(rHandMsg, myRemoteLocation);
+}
+
+/** 
+ * @description sends a closing message to OSC for all given users.
+ * @arg Listof User users: the users to close out
+ */
+void closingMessage(ArrayList<User> users) {
+  for (int i = 0; i < users.size(); i++) {
+    String oscId = "/" + str(i) + "/";
+    OscMessage close = new OscMessage(oscId + "close");
+    oscP5.send(close, myRemoteLocation);
+  }
 }
 
 // -----------------

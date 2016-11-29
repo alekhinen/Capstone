@@ -121,15 +121,13 @@ void draw() {
   imgColor = kinect.getColorImage();
   // skeletons (aka users)
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
-  // reset the user list (as people could have entered/left the FOV).
-  // TODO: generate the list once in the beginning and keep it constant. 
-  //       only remove / add if there are new skeletons.
-  //users = new ArrayList<User>();
 
   // reset the screen.
   background(150);
   
   if (skeletonArray.size() != users.size()) {
+    // TODO: should we be closing all the users out whenever one comes or leaves?
+    closingMessage(users);
     users = new ArrayList<User>();
   }
   
@@ -251,6 +249,18 @@ void sendMessage(User u, int id) {
   OscMessage coordMsg = new OscMessage(oscId + "coord");
   coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y, u.chestPosn.z});
   oscP5.send(coordMsg, myRemoteLocation);
+}
+
+/** 
+ * @description sends a closing message to OSC for all given users.
+ * @arg Listof User users: the users to close out
+ */
+void closingMessage(ArrayList<User> users) {
+  for (int i = 0; i < users.size(); i++) {
+    String oscId = "/" + str(i) + "/";
+    OscMessage close = new OscMessage(oscId + "close");
+    oscP5.send(close, myRemoteLocation);
+  }
 }
 
 // -----------------

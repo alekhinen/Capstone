@@ -48,10 +48,8 @@ class User {
   color cChest;
   String cChestName;
   PVector chestPosn;
-  int id;
   
-  User(int id, color cChest, String cChestName, PVector chestPosn) {
-    this.id = id;
+  User(color cChest, String cChestName, PVector chestPosn) {
     this.cChest = cChest;
     this.cChestName = cChestName;
     this.chestPosn = chestPosn;
@@ -109,7 +107,7 @@ void setup() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
-  myRemoteLocation = new NetAddress("192.168.1.2", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.3", 8000);
 }
 
 // ----
@@ -130,40 +128,29 @@ void draw() {
 
   // reset the screen.
   background(150);
-  // TODO: debug screen (should remove later).
-  // image(kinect.getDepthImage(), 0, 0);
   
-  // TODO: when the skeleton list changes in size, user list should be reset?
-  
-  if (skeletonArray.size() == 0) {
+  if (skeletonArray.size() != users.size()) {
     users = new ArrayList<User>();
   }
   
-  // TODO: it seems like the skeletons array pushes a new user to the beginning
-  //       instead of at the end. this has implications with User ids.
   for (int i = 0; i < skeletonArray.size(); i++) {
     KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-    if (skeleton.isTracked() && i == 0) {
+    if (skeleton.isTracked()) {
       KJoint[] joints = skeleton.getJoints();
       
-      boolean userExists = false;
+      boolean userExists = i < users.size();
       User currentUser;
-      
-      // check to see if the user already exists (by id).
-      for (User u : users) {
-        if (u.id == i) {
-          userExists = true;
-          currentUser = u;
-          updateUser(currentUser, joints[KinectPV2.JointType_SpineMid]);
-          drawUser(currentUser);
-          break;
-        }
-      }
       
       // if the user doesn't already exist, generate.
       if (!userExists) {
-        currentUser = generateUser(joints[KinectPV2.JointType_SpineMid], i);
+        currentUser = generateUser(joints[KinectPV2.JointType_SpineMid]);
+        // add to beginning of list
         users.add(currentUser);
+        drawUser(currentUser);
+      } else {
+        userExists = true;
+        currentUser = users.get(i);
+        updateUser(currentUser, joints[KinectPV2.JointType_SpineMid]);
         drawUser(currentUser);
       }
 
@@ -218,13 +205,13 @@ void drawHandState(KJoint joint) {
 // Generators
 // ----------
 
-User generateUser(KJoint chest, int id) {
+User generateUser(KJoint chest) {
   // TODO: should be a static function in User class. 
-  color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 15);
+  color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 5);
   String colorName = getClosestNameFromColor(jointColor);
   int z = getDepthFromJoint(chest);
   PVector mappedJoint = mapDepthToScreen(chest);
-  return new User(id, jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
+  return new User(jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
 }
 
 // --------
@@ -281,7 +268,7 @@ int getDepthFromJoint(KJoint joint) {
   // note 2: (x, y) can go negative. workaround is to use the max of either 0 or the coordinate value.
   // note 3: joint.getZ() always returns 0 which is why we need the depth value.
   int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
-  int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 424); 
+  int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 423); 
   return rawDepth[x+(512*y)];
 }
 

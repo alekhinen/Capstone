@@ -111,7 +111,7 @@ void setup() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
   
-  myRemoteLocation = new NetAddress("192.168.1.3", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.4", 8000);
 }
 
 // ----
@@ -154,7 +154,10 @@ void draw() {
       } else {
         userExists = true;
         currentUser = users.get(i);
-        updateUser(currentUser, joints[KinectPV2.JointType_SpineMid]);
+        updateUser(currentUser, 
+                   joints[KinectPV2.JointType_SpineMid], 
+                   joints[KinectPV2.JointType_HandLeft],
+                   joints[KinectPV2.JointType_HandRight]);
         drawUser(currentUser);
       }
 
@@ -230,11 +233,17 @@ User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
 // Mutators
 // --------
 
-void updateUser(User u, KJoint chest) {
+void updateUser(User u, KJoint chest, KJoint lHand, KJoint rHand) {
   // TODO: should be moved into User class.
   int z = getDepthFromJoint(chest);
+  
   PVector mappedJoint = mapDepthToScreen(chest);
+  PVector mappedLeft  = mapDepthToScreen(lHand);
+  PVector mappedRight = mapDepthToScreen(rHand);
+  
   u.chestPosn = new PVector(mappedJoint.x, mappedJoint.y, z);
+  u.lHandPosn = mappedLeft;
+  u.rHandPosn = mappedRight;
 }
 
 // -------------

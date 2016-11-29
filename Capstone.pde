@@ -48,11 +48,15 @@ class User {
   color cChest;
   String cChestName;
   PVector chestPosn;
+  PVector lHandPosn;
+  PVector rHandPosn;
   
-  User(color cChest, String cChestName, PVector chestPosn) {
+  User(color cChest, String cChestName, PVector chestPosn, PVector lHandPosn, PVector rHandPosn) {
     this.cChest = cChest;
     this.cChestName = cChestName;
     this.chestPosn = chestPosn;
+    this.lHandPosn = lHandPosn;
+    this.rHandPosn = rHandPosn;
   }
 
 }
@@ -141,7 +145,9 @@ void draw() {
       
       // if the user doesn't already exist, generate.
       if (!userExists) {
-        currentUser = generateUser(joints[KinectPV2.JointType_SpineMid]);
+        currentUser = generateUser(joints[KinectPV2.JointType_SpineMid],
+                                   joints[KinectPV2.JointType_HandLeft],
+                                   joints[KinectPV2.JointType_HandRight]);
         // add to beginning of list
         users.add(currentUser);
         drawUser(currentUser);
@@ -203,13 +209,21 @@ void drawHandState(KJoint joint) {
 // Generators
 // ----------
 
-User generateUser(KJoint chest) {
+User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
   // TODO: should be a static function in User class. 
   color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 5);
   String colorName = getClosestNameFromColor(jointColor);
   int z = getDepthFromJoint(chest);
+  
   PVector mappedJoint = mapDepthToScreen(chest);
-  return new User(jointColor, colorName, new PVector(mappedJoint.x, mappedJoint.y, z));
+  PVector mappedLeft  = mapDepthToScreen(lHand);
+  PVector mappedRight = mapDepthToScreen(rHand);
+  
+  return new User(jointColor, 
+                  colorName, 
+                  new PVector(mappedJoint.x, mappedJoint.y, z),
+                  mappedLeft,
+                  mappedRight);
 }
 
 // --------
@@ -249,6 +263,14 @@ void sendMessage(User u, int id) {
   OscMessage coordMsg = new OscMessage(oscId + "coord");
   coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y, u.chestPosn.z});
   oscP5.send(coordMsg, myRemoteLocation);
+  
+  OscMessage lHandMsg = new OscMessage(oscId + "lHandCoord");
+  lHandMsg.add(new float [] {u.lHandPosn.x, u.lHandPosn.y});
+  oscP5.send(lHandMsg, myRemoteLocation);
+  
+  OscMessage rHandMsg = new OscMessage(oscId + "rHandCoord");
+  rHandMsg.add(new float [] {u.rHandPosn.x, u.rHandPosn.y});
+  oscP5.send(rHandMsg, myRemoteLocation);
 }
 
 /** 

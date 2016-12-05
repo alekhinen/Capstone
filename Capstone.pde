@@ -85,6 +85,13 @@ SonicColor [] sonicColors = {
 // dynamic list of users.
 ArrayList<User> users;
 
+// ------ agents ------
+BackgroundAgent[] agents = new BackgroundAgent[10000];
+int agentsCount = 4000;
+float noiseScale = 100, noiseStrength = 10, noiseZRange = 0.4;
+float overlayAlpha = 10, agentsAlpha = 90, strokeWidth = 0.3;
+int drawMode = 1;
+
 // ================
 // Global Functions
 // ================
@@ -96,6 +103,17 @@ ArrayList<User> users;
 void setup() {
   size(displayWidth, displayHeight, P3D);
 
+  // initialize kinect stuff. 
+  initKinect();
+  // generate background agents.
+  for(int i=0; i<agents.length; i++) agents[i] = new BackgroundAgent();
+  // initialize users.
+  users = new ArrayList<User>();
+  // initialize OSC.
+  initOsc();
+}
+
+void initKinect() {
   kinect = new KinectPV2(this);
 
   kinect.enableDepthImg(true);
@@ -103,14 +121,11 @@ void setup() {
   kinect.enableSkeletonColorMap(true);
 
   kinect.init();
-  
-  // TODO: generate the list once in the beginning and keep it constant. 
-  //       only remove / add if there are new skeletons.
-  users = new ArrayList<User>();
-  
+}
+
+void initOsc() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
-  
   myRemoteLocation = new NetAddress("192.168.1.4", 8000);
 }
 
@@ -127,7 +142,13 @@ void draw() {
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   // reset the screen.
-  background(150);
+  fill(255, overlayAlpha);
+  noStroke();
+  rect(0,0,width,height);
+  
+  stroke(0, agentsAlpha);
+  // draw background agents
+  for(int i=0; i<agentsCount; i++) agents[i].update1();
   
   if (skeletonArray.size() != users.size()) {
     // TODO: should we be closing all the users out whenever one comes or leaves?
@@ -167,10 +188,15 @@ void draw() {
     }
   }
   
+  float avgDepth = 0;
   for (int i = 0; i < users.size(); i++) {
     User u = users.get(i);
+    avgDepth += u.chestPosn.z;
     sendMessage(u, i);
   }
+  avgDepth /= users.size();
+  agentsAlpha = 255 - map(avgDepth, 0, 4500, 0, 255);
+  agentsCount = 10000 - Math.round(map(avgDepth, 0, 4500, 0, 10000));
 
   fill(255, 0, 0);
   text(frameRate, 50, 50);
@@ -179,18 +205,11 @@ void draw() {
 void drawUser(User u) {
   noStroke();
   
-  // draws the depth as a square in the center of the screen.
-  pushMatrix();
-  translate(displayWidth / 2, displayHeight / 2, 0);
-  fill(map(u.chestPosn.z, 0, 4500, 0, 255));
-  rect(0, 0, 50, 50);
-  popMatrix();
-  
   // draws the chest as a circle with the user's color.
   pushMatrix();
   translate(u.chestPosn.x, u.chestPosn.y, 0);
   fill(u.cChest);
-  ellipse(0, 0, 70, 70);
+  ellipse(0, 0, 30, 30);
   popMatrix();
   
   fill(255, 0, 0);
@@ -201,10 +220,11 @@ void drawUser(User u) {
 void drawHandState(KJoint joint) {
   noStroke();
   handState(joint.getState());
+  
   pushMatrix();
   PVector mappedJoint = mapDepthToScreen(joint); 
   translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
-  ellipse(0, 0, 70, 70);
+  ellipse(0, 0, 15, 15);
   popMatrix();
 }
 

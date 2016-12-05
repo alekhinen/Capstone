@@ -200,7 +200,7 @@ void draw() {
       }
 
       // draw different color for each hand state
-      drawHandState(joints[KinectPV2.JointType_HandRight]);
+      //drawHandState(joints[KinectPV2.JointType_HandRight]);
       //drawHandState(joints[KinectPV2.JointType_HandLeft]);
     }
   }
@@ -220,30 +220,18 @@ void draw() {
 }
 
 void drawUser(User u) {
-  noStroke();
-  
-  // draws the chest as a circle with the user's color.
-  pushMatrix();
-  translate(u.chestPosn.x, u.chestPosn.y, 0);
-  fill(u.cChest);
-  ellipse(0, 0, 30, 30);
-  popMatrix();
-  
-  fill(255, 0, 0);
-  text(u.cChestName, 50, 70);
-}
-
-// draw hand state
-void drawHandState(KJoint joint) {
-  
-  PVector mappedJoint = mapDepthToScreen(joint); 
   
   // --- P22301
   
-  stroke(0.75);
+  stroke(0.25);
   
-  float centerX = mappedJoint.x;
-  float centerY = mappedJoint.y;
+  float centerX = u.chestPosn.x;
+  float centerY = u.chestPosn.y;
+  
+  float hLeftX = u.lHandPosn.x;
+  float hLeftY = u.lHandPosn.y;
+  float hRightX = u.rHandPosn.x;
+  float hRightY = u.rHandPosn.y;
 
   // calculate new points
   for (int i=0; i<formResolution; i++){
@@ -252,8 +240,7 @@ void drawHandState(KJoint joint) {
     // ellipse(x[i], y[i], 5, 5);
   }
 
-  if (joint.getState() == KinectPV2.HandState_Closed) fill(random(255));
-  else noFill();
+  noFill();
 
   beginShape();
   // start controlpoint
@@ -261,13 +248,40 @@ void drawHandState(KJoint joint) {
 
   // only these points are drawn
   for (int i=0; i<formResolution; i++){
-    curveVertex(x[i]+centerX, y[i]+centerY);
+    int left = Math.round(random(2, formResolution));
+    int right = Math.round(random(2, formResolution));
+    if (i == left) {
+      curveVertex(x[i]+hLeftX, y[i]+hLeftY);
+    } else if (i == right) {
+      curveVertex(x[i]+hRightX, y[i]+hRightY);
+    } else {
+      curveVertex(x[i]+centerX, y[i]+centerY);
+    }
   }
   curveVertex(x[0]+centerX, y[0]+centerY);
 
   // end controlpoint
   curveVertex(x[1]+centerX, y[1]+centerY);
   endShape();
+  
+  fill(255, 0, 0);
+  text(u.cChestName, 50, 70);
+}
+
+// draw hand state
+void drawHandState(KJoint joint) {
+  noStroke();
+  handState(joint.getState());
+  
+  PVector mappedJoint = mapDepthToScreen(joint); 
+  
+  // draws the chest as a circle with the user's color.
+  pushMatrix();
+  translate(mappedJoint.x, mappedJoint.y, 0);
+  //fill(u.cChest); perhaps this should be the color of the user.
+  ellipse(0, 0, 30, 30);
+  popMatrix();
+  
 }
 
 // ----------

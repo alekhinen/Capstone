@@ -128,6 +128,9 @@ void setup() {
     x[i] = cos(angle*i) * initRadius;
     y[i] = sin(angle*i) * initRadius;  
   }
+  
+  stroke(0, 50);
+  background(255);
 }
 
 void initKinect() {
@@ -160,12 +163,12 @@ void draw() {
 
   // reset the screen.
   fill(255, overlayAlpha);
-  noStroke();
-  rect(0,0,width,height);
+  //noStroke();
+  //rect(0,0,width,height);
   
-  stroke(0, agentsAlpha);
+  //stroke(0, agentsAlpha);
   // draw background agents
-  for(int i=0; i<agentsCount; i++) agents[i].update1();
+  //for(int i=0; i<agentsCount; i++) agents[i].update1();
   
   if (skeletonArray.size() != users.size()) {
     // TODO: should we be closing all the users out whenever one comes or leaves?
@@ -223,7 +226,8 @@ void drawUser(User u) {
   
   // --- P22301
   
-  stroke(0.25);
+  stroke(0, 50);
+  strokeWeight(0.5);
   
   float centerX = u.chestPosn.x;
   float centerY = u.chestPosn.y;

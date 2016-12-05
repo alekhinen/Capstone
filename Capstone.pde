@@ -163,8 +163,8 @@ void draw() {
 
   // reset the screen.
   fill(255, overlayAlpha);
-  //noStroke();
-  //rect(0,0,width,height);
+  noStroke();
+  rect(0,0,width,height);
   
   //stroke(0, agentsAlpha);
   // draw background agents

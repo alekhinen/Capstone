@@ -22,7 +22,6 @@ import netP5.*;
 // =======
 
 class SonicColor {
-  
   String name;
   color colorValue;
   
@@ -44,14 +43,17 @@ class SonicColor {
 }
 
 class User {
-
   color cChest;
   String cChestName;
   PVector chestPosn;
   PVector lHandPosn;
   PVector rHandPosn;
   
-  User(color cChest, String cChestName, PVector chestPosn, PVector lHandPosn, PVector rHandPosn) {
+  User(color cChest, 
+       String cChestName, 
+       PVector chestPosn, 
+       PVector lHandPosn, 
+       PVector rHandPosn) {
     this.cChest = cChest;
     this.cChestName = cChestName;
     this.chestPosn = chestPosn;
@@ -92,6 +94,14 @@ float noiseScale = 100, noiseStrength = 10, noiseZRange = 0.4;
 float overlayAlpha = 10, agentsAlpha = 90, strokeWidth = 0.3;
 int drawMode = 1;
 
+// P22301
+int formResolution = 15;
+int stepSize = 2;
+float distortionFactor = 1;
+float initRadius = 45;
+float[] x = new float[formResolution];
+float[] y = new float[formResolution];
+
 // ================
 // Global Functions
 // ================
@@ -111,6 +121,13 @@ void setup() {
   users = new ArrayList<User>();
   // initialize OSC.
   initOsc();
+  
+  // P22301
+  float angle = radians(360/float(formResolution));
+  for (int i=0; i<formResolution; i++){
+    x[i] = cos(angle*i) * initRadius;
+    y[i] = sin(angle*i) * initRadius;  
+  }
 }
 
 void initKinect() {
@@ -184,7 +201,7 @@ void draw() {
 
       // draw different color for each hand state
       drawHandState(joints[KinectPV2.JointType_HandRight]);
-      drawHandState(joints[KinectPV2.JointType_HandLeft]);
+      //drawHandState(joints[KinectPV2.JointType_HandLeft]);
     }
   }
   
@@ -218,14 +235,39 @@ void drawUser(User u) {
 
 // draw hand state
 void drawHandState(KJoint joint) {
-  noStroke();
-  handState(joint.getState());
   
-  pushMatrix();
   PVector mappedJoint = mapDepthToScreen(joint); 
-  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
-  ellipse(0, 0, 15, 15);
-  popMatrix();
+  
+  // --- P22301
+  
+  stroke(0.75);
+  
+  float centerX = mappedJoint.x;
+  float centerY = mappedJoint.y;
+
+  // calculate new points
+  for (int i=0; i<formResolution; i++){
+    x[i] += random(-stepSize,stepSize);
+    y[i] += random(-stepSize,stepSize);
+    // ellipse(x[i], y[i], 5, 5);
+  }
+
+  if (joint.getState() == KinectPV2.HandState_Closed) fill(random(255));
+  else noFill();
+
+  beginShape();
+  // start controlpoint
+  curveVertex(x[formResolution-1]+centerX, y[formResolution-1]+centerY);
+
+  // only these points are drawn
+  for (int i=0; i<formResolution; i++){
+    curveVertex(x[i]+centerX, y[i]+centerY);
+  }
+  curveVertex(x[0]+centerX, y[0]+centerY);
+
+  // end controlpoint
+  curveVertex(x[1]+centerX, y[1]+centerY);
+  endShape();
 }
 
 // ----------

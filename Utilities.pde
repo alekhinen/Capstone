@@ -80,6 +80,10 @@ PVector mapDepthToScreen(KJoint joint) {
   return new PVector(x, y, z);
 }
 
+double euclideanDistance(PVector a, PVector b) {
+  return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
+}
+
 /*
 Different hand state
  KinectPV2.HandState_Open

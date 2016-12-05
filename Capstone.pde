@@ -231,9 +231,6 @@ void drawUser(User u) {
   
   // --- P22301
   
-  stroke(0, 50);
-  strokeWeight(0.5);
-  
   float centerX = u.chestPosn.x;
   float centerY = u.chestPosn.y;
   
@@ -249,6 +246,10 @@ void drawUser(User u) {
     // ellipse(x[i], y[i], 5, 5);
   }
 
+  float handDist = (float) euclideanDistance(u.lHandPosn, u.rHandPosn);
+  
+  stroke(0, 50);
+  strokeWeight(map(handDist, 0, 2203, 0, 5));
   noFill();
 
   beginShape();

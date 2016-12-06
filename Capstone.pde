@@ -248,7 +248,9 @@ void drawUser(User u) {
 
   float handDist = (float) euclideanDistance(u.lHandPosn, u.rHandPosn);
   
-  stroke(0, 50);
+  // set color of stroke to user's chest color.
+  stroke(u.cChest, 50);
+  // set stroke weight off euclidean distance between hands.
   strokeWeight(map(handDist, 0, 2203, 0, 5));
   noFill();
 

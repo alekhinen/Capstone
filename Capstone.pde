@@ -49,6 +49,14 @@ class User {
   PVector lHandPosn;
   PVector rHandPosn;
   
+  // P22301
+  int formResolution = 15;
+  int stepSize = 2;
+  float distortionFactor = 1;
+  float initRadius = 45;
+  float[] x = new float[formResolution];
+  float[] y = new float[formResolution];
+  
   User(color cChest, 
        String cChestName, 
        PVector chestPosn, 
@@ -59,6 +67,13 @@ class User {
     this.chestPosn = chestPosn;
     this.lHandPosn = lHandPosn;
     this.rHandPosn = rHandPosn;
+    
+    // P22301
+    float angle = radians(360/float(formResolution));
+    for (int i=0; i<formResolution; i++){
+      x[i] = cos(angle*i) * initRadius;
+      y[i] = sin(angle*i) * initRadius;  
+    }
   }
 
 }
@@ -94,14 +109,6 @@ float noiseScale = 100, noiseStrength = 10, noiseZRange = 0.4;
 float overlayAlpha = 10, agentsAlpha = 90, strokeWidth = 0.3;
 int drawMode = 1;
 
-// P22301
-int formResolution = 15;
-int stepSize = 2;
-float distortionFactor = 1;
-float initRadius = 45;
-float[] x = new float[formResolution];
-float[] y = new float[formResolution];
-
 // key events
 boolean drawAgents = false;
 
@@ -125,13 +132,6 @@ void setup() {
   // initialize OSC.
   initOsc();
   
-  // P22301
-  float angle = radians(360/float(formResolution));
-  for (int i=0; i<formResolution; i++){
-    x[i] = cos(angle*i) * initRadius;
-    y[i] = sin(angle*i) * initRadius;  
-  }
-  
   stroke(0, 50);
   background(255);
 }
@@ -149,7 +149,7 @@ void initKinect() {
 void initOsc() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
-  myRemoteLocation = new NetAddress("192.168.1.4", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.6", 8000);
 }
 
 // ----
@@ -240,9 +240,9 @@ void drawUser(User u) {
   float hRightY = u.rHandPosn.y;
 
   // calculate new points
-  for (int i=0; i<formResolution; i++){
-    x[i] += random(-stepSize,stepSize);
-    y[i] += random(-stepSize,stepSize);
+  for (int i=0; i<u.formResolution; i++){
+    u.x[i] += random(-u.stepSize,u.stepSize);
+    u.y[i] += random(-u.stepSize,u.stepSize);
     // ellipse(x[i], y[i], 5, 5);
   }
 
@@ -256,24 +256,24 @@ void drawUser(User u) {
 
   beginShape();
   // start controlpoint
-  curveVertex(x[formResolution-1]+centerX, y[formResolution-1]+centerY);
+  curveVertex(u.x[u.formResolution-1]+centerX, u.y[u.formResolution-1]+centerY);
 
   // only these points are drawn
-  for (int i=0; i<formResolution; i++){
-    int left = Math.round(random(2, formResolution));
-    int right = Math.round(random(2, formResolution));
+  for (int i=0; i<u.formResolution; i++){
+    int left = Math.round(random(2, u.formResolution));
+    int right = Math.round(random(2, u.formResolution));
     if (i == left) {
-      curveVertex(x[i]+hLeftX, y[i]+hLeftY);
+      curveVertex(u.x[i]+hLeftX, u.y[i]+hLeftY);
     } else if (i == right) {
-      curveVertex(x[i]+hRightX, y[i]+hRightY);
+      curveVertex(u.x[i]+hRightX, u.y[i]+hRightY);
     } else {
-      curveVertex(x[i]+centerX, y[i]+centerY);
+      curveVertex(u.x[i]+centerX, u.y[i]+centerY);
     }
   }
-  curveVertex(x[0]+centerX, y[0]+centerY);
+  curveVertex(u.x[0]+centerX, u.y[0]+centerY);
 
   // end controlpoint
-  curveVertex(x[1]+centerX, y[1]+centerY);
+  curveVertex(u.x[1]+centerX, u.y[1]+centerY);
   endShape();
   
   fill(255, 0, 0);

@@ -22,7 +22,6 @@ import netP5.*;
 // =======
 
 class SonicColor {
-  
   String name;
   color colorValue;
   
@@ -44,19 +43,37 @@ class SonicColor {
 }
 
 class User {
-
   color cChest;
   String cChestName;
   PVector chestPosn;
   PVector lHandPosn;
   PVector rHandPosn;
   
-  User(color cChest, String cChestName, PVector chestPosn, PVector lHandPosn, PVector rHandPosn) {
+  // P22301
+  int formResolution = 15;
+  int stepSize = 2;
+  float distortionFactor = 1;
+  float initRadius = 45;
+  float[] x = new float[formResolution];
+  float[] y = new float[formResolution];
+  
+  User(color cChest, 
+       String cChestName, 
+       PVector chestPosn, 
+       PVector lHandPosn, 
+       PVector rHandPosn) {
     this.cChest = cChest;
     this.cChestName = cChestName;
     this.chestPosn = chestPosn;
     this.lHandPosn = lHandPosn;
     this.rHandPosn = rHandPosn;
+    
+    // P22301
+    float angle = radians(360/float(formResolution));
+    for (int i=0; i<formResolution; i++){
+      x[i] = cos(angle*i) * initRadius;
+      y[i] = sin(angle*i) * initRadius;  
+    }
   }
 
 }
@@ -85,6 +102,16 @@ SonicColor [] sonicColors = {
 // dynamic list of users.
 ArrayList<User> users;
 
+// ------ agents ------
+BackgroundAgent[] agents = new BackgroundAgent[10000];
+int agentsCount = 4000;
+float noiseScale = 100, noiseStrength = 10, noiseZRange = 0.4;
+float overlayAlpha = 10, agentsAlpha = 90, strokeWidth = 0.3;
+int drawMode = 1;
+
+// key events
+boolean drawAgents = false;
+
 // ================
 // Global Functions
 // ================
@@ -96,6 +123,20 @@ ArrayList<User> users;
 void setup() {
   size(displayWidth, displayHeight, P3D);
 
+  // initialize kinect stuff. 
+  initKinect();
+  // generate background agents.
+  for(int i=0; i<agents.length; i++) agents[i] = new BackgroundAgent();
+  // initialize users.
+  users = new ArrayList<User>();
+  // initialize OSC.
+  initOsc();
+  
+  stroke(0, 50);
+  background(255);
+}
+
+void initKinect() {
   kinect = new KinectPV2(this);
 
   kinect.enableDepthImg(true);
@@ -103,15 +144,12 @@ void setup() {
   kinect.enableSkeletonColorMap(true);
 
   kinect.init();
-  
-  // TODO: generate the list once in the beginning and keep it constant. 
-  //       only remove / add if there are new skeletons.
-  users = new ArrayList<User>();
-  
+}
+
+void initOsc() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
-  
-  myRemoteLocation = new NetAddress("192.168.1.4", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.6", 8000);
 }
 
 // ----
@@ -127,7 +165,15 @@ void draw() {
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   // reset the screen.
-  background(150);
+  fill(255, overlayAlpha);
+  noStroke();
+  rect(0,0,width,height);
+  
+  // draw background agents
+  if (drawAgents) {
+    stroke(0, agentsAlpha);
+    for(int i=0; i<agentsCount; i++) agents[i].update1();
+  }
   
   if (skeletonArray.size() != users.size()) {
     // TODO: should we be closing all the users out whenever one comes or leaves?
@@ -162,36 +208,73 @@ void draw() {
       }
 
       // draw different color for each hand state
-      drawHandState(joints[KinectPV2.JointType_HandRight]);
-      drawHandState(joints[KinectPV2.JointType_HandLeft]);
+      //drawHandState(joints[KinectPV2.JointType_HandRight]);
+      //drawHandState(joints[KinectPV2.JointType_HandLeft]);
     }
   }
   
+  float avgDepth = 0;
   for (int i = 0; i < users.size(); i++) {
     User u = users.get(i);
+    avgDepth += u.chestPosn.z;
     sendMessage(u, i);
   }
+  avgDepth /= users.size();
+  agentsAlpha = 255 - map(avgDepth, 0, 4500, 0, 255);
+  agentsCount = 10000 - Math.round(map(avgDepth, 0, 4500, 0, 10000));
 
   fill(255, 0, 0);
   text(frameRate, 50, 50);
 }
 
 void drawUser(User u) {
-  noStroke();
   
-  // draws the depth as a square in the center of the screen.
-  pushMatrix();
-  translate(displayWidth / 2, displayHeight / 2, 0);
-  fill(map(u.chestPosn.z, 0, 4500, 0, 255));
-  rect(0, 0, 50, 50);
-  popMatrix();
+  // --- P22301
   
-  // draws the chest as a circle with the user's color.
-  pushMatrix();
-  translate(u.chestPosn.x, u.chestPosn.y, 0);
-  fill(u.cChest);
-  ellipse(0, 0, 70, 70);
-  popMatrix();
+  float centerX = u.chestPosn.x;
+  float centerY = u.chestPosn.y;
+  
+  float hLeftX = u.lHandPosn.x;
+  float hLeftY = u.lHandPosn.y;
+  float hRightX = u.rHandPosn.x;
+  float hRightY = u.rHandPosn.y;
+
+  // calculate new points
+  for (int i=0; i<u.formResolution; i++){
+    u.x[i] += random(-u.stepSize,u.stepSize);
+    u.y[i] += random(-u.stepSize,u.stepSize);
+    // ellipse(x[i], y[i], 5, 5);
+  }
+
+  float handDist = (float) euclideanDistance(u.lHandPosn, u.rHandPosn);
+  
+  // set color of stroke to user's chest color.
+  stroke(u.cChest, 50);
+  // set stroke weight off euclidean distance between hands.
+  strokeWeight(map(handDist, 0, 2203, 0, 5));
+  noFill();
+
+  beginShape();
+  // start controlpoint
+  curveVertex(u.x[u.formResolution-1]+centerX, u.y[u.formResolution-1]+centerY);
+
+  // only these points are drawn
+  for (int i=0; i<u.formResolution; i++){
+    int left = Math.round(random(2, u.formResolution));
+    int right = Math.round(random(2, u.formResolution));
+    if (i == left) {
+      curveVertex(u.x[i]+hLeftX, u.y[i]+hLeftY);
+    } else if (i == right) {
+      curveVertex(u.x[i]+hRightX, u.y[i]+hRightY);
+    } else {
+      curveVertex(u.x[i]+centerX, u.y[i]+centerY);
+    }
+  }
+  curveVertex(u.x[0]+centerX, u.y[0]+centerY);
+
+  // end controlpoint
+  curveVertex(u.x[1]+centerX, u.y[1]+centerY);
+  endShape();
   
   fill(255, 0, 0);
   text(u.cChestName, 50, 70);
@@ -201,11 +284,16 @@ void drawUser(User u) {
 void drawHandState(KJoint joint) {
   noStroke();
   handState(joint.getState());
-  pushMatrix();
+  
   PVector mappedJoint = mapDepthToScreen(joint); 
-  translate(mappedJoint.x, mappedJoint.y, mappedJoint.z);
-  ellipse(0, 0, 70, 70);
+  
+  // draws the chest as a circle with the user's color.
+  pushMatrix();
+  translate(mappedJoint.x, mappedJoint.y, 0);
+  //fill(u.cChest); perhaps this should be the color of the user.
+  ellipse(0, 0, 30, 30);
   popMatrix();
+  
 }
 
 // ----------
@@ -294,108 +382,18 @@ void closingMessage(ArrayList<User> users) {
   }
 }
 
-// -----------------
-// Utility Functions
-// -----------------
+// -------------
+// Key Functions
+// -------------
 
-/**
- * @description: 
- * @returns integer value between [0 - 4500]
- */
-int getDepthFromJoint(KJoint joint) {
-  // map the (x, y) from joint from color space to depth space.
-  // note 1: this is a rough conversion that does not take into account that the placement
-  //         of the depth sensor and camera sensor are different (so it's not a clean mapping).
-  // note 2: (x, y) can go negative. workaround is to use the max of either 0 or the coordinate value.
-  // note 3: joint.getZ() always returns 0 which is why we need the depth value.
-  int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
-  int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 423); 
-  return rawDepth[x+(512*y)];
-}
+void keyReleased() {
+  if (key == 'b' || key == 'B') drawAgents = !drawAgents;
+  if (key == DELETE || key == BACKSPACE) background(255);
 
-/**
- * @description: returns the name of the sonic color which is closest to the given color.
- */
-String getClosestNameFromColor(color c) {
-  String bestName = "";
-  double closestDist = -1;
-  for (SonicColor sColor : sonicColors) {
-    double dist = sColor.euclideanDistance(c);
-    if (closestDist == -1 || dist < closestDist) {
-      closestDist = dist;
-      bestName = sColor.name;
-    }
-  }
-  return bestName;
-};
 
-/** 
- * @description: Gets the average color in a radius for a point from the HD color image.
- * @returns color
- */
-color getColorInRadius(int x, int y, int radius) {
-  // Ensure these coordinates don't go outside their bounds (e.g. 0-1920, 0-1080).
-  int lowerX = Math.max((x - radius), 0);
-  int upperX = Math.min((x + radius), 1920);
-  
-  int lowerY = Math.max((y - radius), 0);
-  int upperY = Math.min((y + radius), 1080);
-  
-  int increment = 1;
-  int r = 0;
-  int g = 0;
-  int b = 0;
-  
-  // sum the color values.
-  while (lowerX < upperX) {
-    int newLowerY = lowerY;
-    while (newLowerY < upperY) {
-      color c = imgColor.get(lowerX, newLowerY);
-      r += Math.round(red(c));
-      g += Math.round(green(c));
-      b += Math.round(blue(c));
-      System.out.println(r + " " + g + " " + b);
-      increment += 1;
-      newLowerY += 1;
-    }
-    lowerX += 1;
-  }
-  
-  // divide the sum by the increment to get the average values.
-  r = Math.round(r / increment);
-  g = Math.round(g / increment);
-  b = Math.round(b / increment);
-  
-  return color(r, g, b);
-}
-
-PVector mapDepthToScreen(KJoint joint) {
-  int x = Math.round(map(joint.getX(), 0, 1920, 0, displayWidth));
-  int y = Math.round(map(joint.getY(), 0, 1080, 0, displayHeight));
-  int z = Math.round(joint.getZ());
-  return new PVector(x, y, z);
-}
-
-/*
-Different hand state
- KinectPV2.HandState_Open
- KinectPV2.HandState_Closed
- KinectPV2.HandState_Lasso
- KinectPV2.HandState_NotTracked
- */
-void handState(int handState) {
-  switch(handState) {
-  case KinectPV2.HandState_Open:
-    fill(0, 255, 0);
-    break;
-  case KinectPV2.HandState_Closed:
-    fill(255, 0, 0);
-    break;
-  case KinectPV2.HandState_Lasso:
-    fill(0, 0, 255);
-    break;
-  case KinectPV2.HandState_NotTracked:
-    fill(255, 255, 255);
-    break;
-  }
+  // switch draw loop on/off
+  // TODO: this should be for fullscreen toggling
+  //if (key == 'f' || key == 'F') freeze = !freeze;
+  //if (freeze == true) noLoop();
+  //else loop();
 }

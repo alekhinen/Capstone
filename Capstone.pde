@@ -149,7 +149,7 @@ void initKinect() {
 void initOsc() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
-  myRemoteLocation = new NetAddress("192.168.1.5", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.2", 8000);
 }
 
 // ----

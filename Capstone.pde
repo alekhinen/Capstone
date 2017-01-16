@@ -149,7 +149,7 @@ void initKinect() {
 void initOsc() {
   /* start oscP5, listening for incoming messages at port 8000 */
   oscP5 = new OscP5(this,12000);
-  myRemoteLocation = new NetAddress("192.168.1.6", 8000);
+  myRemoteLocation = new NetAddress("192.168.1.2", 8000);
 }
 
 // ----
@@ -251,7 +251,7 @@ void drawUser(User u) {
   // set color of stroke to user's chest color.
   stroke(u.cChest, 50);
   // set stroke weight off euclidean distance between hands.
-  strokeWeight(map(handDist, 0, 2203, 0, 5));
+  strokeWeight(map(handDist, 0, 2203, 0, 9));
   noFill();
 
   beginShape();

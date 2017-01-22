@@ -11,6 +11,8 @@ Notes on KinectPV2:
 // Imports
 // =======
 
+import generativedesign.*;
+
 import KinectPV2.KJoint;
 import KinectPV2.*;
 
@@ -54,8 +56,6 @@ void setup() {
 
   // initialize kinect stuff. 
   initKinect();
-  // generate background agents.
-  for(int i=0; i<agents.length; i++) agents[i] = new BackgroundAgent();
   // initialize users.
   users = new ArrayList<User>();
   // initialize OSC.
@@ -94,7 +94,7 @@ void draw() {
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   // reset the screen.
-  fill(255, overlayAlpha);
+  fill(255);
   noStroke();
   rect(0,0,width,height);
   
@@ -120,15 +120,14 @@ void draw() {
                                    joints[KinectPV2.JointType_HandRight]);
         // add to beginning of list
         users.add(currentUser);
-        drawUser(currentUser);
+        currentUser.draw();
       } else {
         userExists = true;
         currentUser = users.get(i);
-        updateUser(currentUser, 
-                   joints[KinectPV2.JointType_SpineMid], 
-                   joints[KinectPV2.JointType_HandLeft],
-                   joints[KinectPV2.JointType_HandRight]);
-        drawUser(currentUser);
+        currentUser.update(joints[KinectPV2.JointType_SpineMid], 
+                           joints[KinectPV2.JointType_HandLeft],
+                           joints[KinectPV2.JointType_HandRight]);
+        currentUser.draw();
       }
 
     }
@@ -142,15 +141,6 @@ void draw() {
 
   fill(255, 0, 0);
   text(frameRate, 50, 50);
-}
-
-void drawUser(User u) {
-  
-  // TODO: could be interesting to increase strength as hands get closer. 
-  float handDist = (float) euclideanDistance(u.lHandPosn, u.rHandPosn);
-  
-  fill(255, 0, 0);
-  text(u.cChestName, 50, 70);
 }
 
 // draw hand state
@@ -188,71 +178,6 @@ User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
                   new PVector(mappedJoint.x, mappedJoint.y, z),
                   mappedLeft,
                   mappedRight);
-}
-
-// --------
-// Mutators
-// --------
-
-void updateUser(User u, KJoint chest, KJoint lHand, KJoint rHand) {
-  // TODO: should be moved into User class.
-  int z = getDepthFromJoint(chest);
-  
-  PVector mappedJoint = mapDepthToScreen(chest);
-  PVector mappedLeft  = mapDepthToScreen(lHand);
-  PVector mappedRight = mapDepthToScreen(rHand);
-  
-  u.chestPosn = new PVector(mappedJoint.x, mappedJoint.y, z);
-  u.lHandPosn = mappedLeft;
-  u.rHandPosn = mappedRight;
-}
-
-// -------------
-// OSC Messaging
-// -------------
-
-/** 
- * @description sends the given user's information over OSC.
- * @arg User u: the user
- * @arg int id: the unique id of the user to use when sending the OSC message.
- */
-void sendMessage(User u, int id) {
-  String oscId = "/" + str(id) + "/";
-  
-  // send name of the user's chest color.
-  OscMessage colorName = new OscMessage(oscId + "colorName");
-  colorName.add(u.cChestName);
-  oscP5.send(colorName, myRemoteLocation);
-  
-  // send rgb value of the user's chest color
-  OscMessage rgbColor = new OscMessage(oscId + "rgbColor");
-  rgbColor.add(new float [] {red(u.cChest), green(u.cChest), blue(u.cChest)});
-  oscP5.send(rgbColor, myRemoteLocation);
-  
-  // send the (x, y, z) coord of the user's chest.
-  OscMessage coordMsg = new OscMessage(oscId + "coord");
-  coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y, u.chestPosn.z});
-  oscP5.send(coordMsg, myRemoteLocation);
-  
-  OscMessage lHandMsg = new OscMessage(oscId + "lHandCoord");
-  lHandMsg.add(new float [] {u.lHandPosn.x, u.lHandPosn.y});
-  oscP5.send(lHandMsg, myRemoteLocation);
-  
-  OscMessage rHandMsg = new OscMessage(oscId + "rHandCoord");
-  rHandMsg.add(new float [] {u.rHandPosn.x, u.rHandPosn.y});
-  oscP5.send(rHandMsg, myRemoteLocation);
-}
-
-/** 
- * @description sends a closing message to OSC for all given users.
- * @arg Listof User users: the users to close out
- */
-void closingMessage(ArrayList<User> users) {
-  for (int i = 0; i < users.size(); i++) {
-    String oscId = "/" + str(i) + "/";
-    OscMessage close = new OscMessage(oscId + "close");
-    oscP5.send(close, myRemoteLocation);
-  }
 }
 
 // -------------

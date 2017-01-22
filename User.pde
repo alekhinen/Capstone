@@ -51,11 +51,15 @@ class User {
   }
   
   void initNodeGrid() {
+    // use a variable height and width to position the nodes randomly within the size of the screen.
+    int seedHeight = Math.round(random(gridSize, height*2));
+    int seedWidth  = Math.round(random(gridSize, width*2));
+    
     int i = 0; 
     for (int y = 0; y < this.yCount; y++) {
       for (int x = 0; x < this.xCount; x++) {
-        float xPos = x*(gridSize/(this.xCount-1))+(width-gridSize)/2;
-        float yPos = y*(gridSize/(this.yCount-1))+(height-gridSize)/2;
+        float xPos = x*(gridSize/(this.xCount-1))+(seedWidth-gridSize)/2;
+        float yPos = y*(gridSize/(this.yCount-1))+(seedHeight-gridSize)/2;
         this.nodes[i] = new OriginNode(xPos, yPos);
         this.nodes[i].setBoundary(0, 0, width, height);
         this.nodes[i].setDamping(0.02);  //// 0.0 - 1.0

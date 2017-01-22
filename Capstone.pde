@@ -17,67 +17,6 @@ import KinectPV2.*;
 import oscP5.*;
 import netP5.*;
 
-// =======
-// Classes
-// =======
-
-class SonicColor {
-  String name;
-  color colorValue;
-  
-  SonicColor(String name, color colorValue) {
-    this.name = name;
-    this.colorValue = colorValue;
-  }
-  
-  /** 
-   * @description: calculates the euclidean distance between this color and a given color.
-   */
-  double euclideanDistance(color c) {
-    float deltaR = red(colorValue) - red(c);
-    float deltaG = green(colorValue) - green(c);
-    float deltaB = blue(colorValue) - blue(c);
-    return Math.sqrt(Math.pow(deltaR, 2) + Math.pow(deltaG, 2) + Math.pow(deltaB, 2));
-  }
-
-}
-
-class User {
-  color cChest;
-  String cChestName;
-  PVector chestPosn;
-  PVector lHandPosn;
-  PVector rHandPosn;
-  
-  // P22301
-  int formResolution = 15;
-  int stepSize = 2;
-  float distortionFactor = 1;
-  float initRadius = 45;
-  float[] x = new float[formResolution];
-  float[] y = new float[formResolution];
-  
-  User(color cChest, 
-       String cChestName, 
-       PVector chestPosn, 
-       PVector lHandPosn, 
-       PVector rHandPosn) {
-    this.cChest = cChest;
-    this.cChestName = cChestName;
-    this.chestPosn = chestPosn;
-    this.lHandPosn = lHandPosn;
-    this.rHandPosn = rHandPosn;
-    
-    // P22301
-    float angle = radians(360/float(formResolution));
-    for (int i=0; i<formResolution; i++){
-      x[i] = cos(angle*i) * initRadius;
-      y[i] = sin(angle*i) * initRadius;  
-    }
-  }
-
-}
-
 // ================
 // Global Variables
 // ================
@@ -101,16 +40,6 @@ SonicColor [] sonicColors = {
 
 // dynamic list of users.
 ArrayList<User> users;
-
-// ------ agents ------
-BackgroundAgent[] agents = new BackgroundAgent[10000];
-int agentsCount = 4000;
-float noiseScale = 100, noiseStrength = 10, noiseZRange = 0.4;
-float overlayAlpha = 10, agentsAlpha = 90, strokeWidth = 0.3;
-int drawMode = 1;
-
-// key events
-boolean drawAgents = false;
 
 // ================
 // Global Functions
@@ -169,12 +98,7 @@ void draw() {
   noStroke();
   rect(0,0,width,height);
   
-  // draw background agents
-  if (drawAgents) {
-    stroke(0, agentsAlpha);
-    for(int i=0; i<agentsCount; i++) agents[i].update1();
-  }
-  
+  // reset the users and send a closing message to OSC if users change.
   if (skeletonArray.size() != users.size()) {
     // TODO: should we be closing all the users out whenever one comes or leaves?
     closingMessage(users);
@@ -207,21 +131,14 @@ void draw() {
         drawUser(currentUser);
       }
 
-      // draw different color for each hand state
-      //drawHandState(joints[KinectPV2.JointType_HandRight]);
-      //drawHandState(joints[KinectPV2.JointType_HandLeft]);
     }
   }
   
-  float avgDepth = 0;
+  // send OSC message about User.
   for (int i = 0; i < users.size(); i++) {
     User u = users.get(i);
-    avgDepth += u.chestPosn.z;
     sendMessage(u, i);
   }
-  avgDepth /= users.size();
-  agentsAlpha = 255 - map(avgDepth, 0, 4500, 0, 255);
-  agentsCount = 10000 - Math.round(map(avgDepth, 0, 4500, 0, 10000));
 
   fill(255, 0, 0);
   text(frameRate, 50, 50);
@@ -229,52 +146,8 @@ void draw() {
 
 void drawUser(User u) {
   
-  // --- P22301
-  
-  float centerX = u.chestPosn.x;
-  float centerY = u.chestPosn.y;
-  
-  float hLeftX = u.lHandPosn.x;
-  float hLeftY = u.lHandPosn.y;
-  float hRightX = u.rHandPosn.x;
-  float hRightY = u.rHandPosn.y;
-
-  // calculate new points
-  for (int i=0; i<u.formResolution; i++){
-    u.x[i] += random(-u.stepSize,u.stepSize);
-    u.y[i] += random(-u.stepSize,u.stepSize);
-    // ellipse(x[i], y[i], 5, 5);
-  }
-
+  // TODO: could be interesting to increase strength as hands get closer. 
   float handDist = (float) euclideanDistance(u.lHandPosn, u.rHandPosn);
-  
-  // set color of stroke to user's chest color.
-  stroke(u.cChest, 50);
-  // set stroke weight off euclidean distance between hands.
-  strokeWeight(map(handDist, 0, 2203, 0, 9));
-  noFill();
-
-  beginShape();
-  // start controlpoint
-  curveVertex(u.x[u.formResolution-1]+centerX, u.y[u.formResolution-1]+centerY);
-
-  // only these points are drawn
-  for (int i=0; i<u.formResolution; i++){
-    int left = Math.round(random(2, u.formResolution));
-    int right = Math.round(random(2, u.formResolution));
-    if (i == left) {
-      curveVertex(u.x[i]+hLeftX, u.y[i]+hLeftY);
-    } else if (i == right) {
-      curveVertex(u.x[i]+hRightX, u.y[i]+hRightY);
-    } else {
-      curveVertex(u.x[i]+centerX, u.y[i]+centerY);
-    }
-  }
-  curveVertex(u.x[0]+centerX, u.y[0]+centerY);
-
-  // end controlpoint
-  curveVertex(u.x[1]+centerX, u.y[1]+centerY);
-  endShape();
   
   fill(255, 0, 0);
   text(u.cChestName, 50, 70);
@@ -387,7 +260,6 @@ void closingMessage(ArrayList<User> users) {
 // -------------
 
 void keyReleased() {
-  if (key == 'b' || key == 'B') drawAgents = !drawAgents;
   if (key == DELETE || key == BACKSPACE) background(255);
 
 

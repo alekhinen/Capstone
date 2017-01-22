@@ -166,6 +166,8 @@ void drawHandState(KJoint joint) {
 User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
   // TODO: should be a static function in User class. 
   color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 5);
+  // increase exposure of color by 50. TODO: needs more work to be accurate.
+  jointColor = color(red(jointColor) + 50, green(jointColor) + 50, blue(jointColor));
   String colorName = getClosestNameFromColor(jointColor);
   int z = getDepthFromJoint(chest);
   

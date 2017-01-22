@@ -136,7 +136,7 @@ class User {
     
     for (int j = 0; j < this.nodes.length; j++) {
       // draw nodes
-      fill(0);
+      fill(this.cChest);
       rect(this.nodes[j].x, this.nodes[j].y, nodeSize, nodeSize);
     }
     

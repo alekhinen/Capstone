@@ -20,7 +20,7 @@ class User {
   
   int gridSize;
   float attractorStrength = 3;
-  int nodeSize = 1;
+  int nodeSize = 2;
   
   // -----------
   // Constructor
@@ -65,7 +65,7 @@ class User {
         float yPos = y*(gridSize/(this.yCount-1))+(seedHeight-gridSize)/2;
         this.nodes[i] = new OriginNode(xPos, yPos);
         this.nodes[i].setBoundary(0, 0, width, height);
-        this.nodes[i].setDamping(0.02);  //// 0.0 - 1.0
+        this.nodes[i].setDamping(0.09);  //// 0.0 - 1.0
         i++;
       }
     }
@@ -91,7 +91,7 @@ class User {
     
     // note: could be interesting to increase strength as hands get closer. 
     float handDist = (float) euclideanDistance(this.lHandPosn, this.rHandPosn);
-    this.attractorStrength = 5 - map(handDist, 0, 1080, 0.1, 5);
+    this.attractorStrength = 2.5 - map(handDist, 0, 1080, 0.1, 2.4);
     
     // update attractor positions.
     

@@ -37,7 +37,7 @@ class User {
     this.lHandPosn = lHandPosn;
     this.rHandPosn = rHandPosn;
     
-    this.gridSize = Math.round(random(100, 501));
+    this.gridSize = Math.round(random(200, 501));
     
     xCount = Math.round(random(50, 251));
     yCount = Math.round(random(50, 251));
@@ -78,9 +78,8 @@ class User {
   void update(KJoint chest, KJoint lHand, KJoint rHand) {
     
     // map and update user skeleton.
-    
+
     int z = getDepthFromJoint(chest);
-    nodeSize = 8 - Math.round(map(z, 0, 4500, 1, 7));
     
     PVector mappedJoint = mapDepthToScreen(chest);
     PVector mappedLeft  = mapDepthToScreen(lHand);

@@ -18,8 +18,9 @@ class User {
   int xCount;
   int yCount;
   
-  float gridSize = 300;
+  int gridSize;
   float attractorStrength = 3;
+  int nodeSize = 1;
   
   // -----------
   // Constructor
@@ -35,6 +36,8 @@ class User {
     this.chestPosn = chestPosn;
     this.lHandPosn = lHandPosn;
     this.rHandPosn = rHandPosn;
+    
+    this.gridSize = Math.round(random(100, 501));
     
     xCount = Math.round(random(50, 251));
     yCount = Math.round(random(50, 251));
@@ -77,6 +80,7 @@ class User {
     // map and update user skeleton.
     
     int z = getDepthFromJoint(chest);
+    nodeSize = 8 - Math.round(map(z, 0, 4500, 1, 7));
     
     PVector mappedJoint = mapDepthToScreen(chest);
     PVector mappedLeft  = mapDepthToScreen(lHand);
@@ -85,6 +89,10 @@ class User {
     this.chestPosn = new PVector(mappedJoint.x, mappedJoint.y, z);
     this.lHandPosn = mappedLeft;
     this.rHandPosn = mappedRight;
+    
+    // note: could be interesting to increase strength as hands get closer. 
+    float handDist = (float) euclideanDistance(this.lHandPosn, this.rHandPosn);
+    this.attractorStrength = 5 - map(handDist, 0, 1080, 0.1, 5);
     
     // update attractor positions.
     
@@ -126,13 +134,11 @@ class User {
   // -------------
   
   void draw() {
-    // TODO: could be interesting to increase strength as hands get closer. 
-    float handDist = (float) euclideanDistance(this.lHandPosn, this.rHandPosn);
     
     for (int j = 0; j < this.nodes.length; j++) {
       // draw nodes
       fill(0);
-      rect(this.nodes[j].x, this.nodes[j].y, 1, 1);
+      rect(this.nodes[j].x, this.nodes[j].y, nodeSize, nodeSize);
     }
     
     fill(255, 0, 0);

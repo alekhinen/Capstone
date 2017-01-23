@@ -28,6 +28,10 @@ KinectPV2 kinect;
 OscP5 oscP5;
 NetAddress myRemoteLocation;
 
+int FRAME_RATE = 30;
+int BPM = 80;
+float FPB = FRAME_RATE * 60.0 / BPM;
+float BPF = BPM / 60.0 / FRAME_RATE;
 int [] rawDepth;
 PImage imgColor;
 
@@ -53,6 +57,8 @@ ArrayList<User> users;
 
 void setup() {
   size(displayWidth, displayHeight, P3D);
+  
+  frameRate(FRAME_RATE);
 
   // initialize kinect stuff. 
   initKinect();
@@ -188,11 +194,4 @@ User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
 
 void keyReleased() {
   if (key == DELETE || key == BACKSPACE) background(255);
-
-
-  // switch draw loop on/off
-  // TODO: this should be for fullscreen toggling
-  //if (key == 'f' || key == 'F') freeze = !freeze;
-  //if (freeze == true) noLoop();
-  //else loop();
 }

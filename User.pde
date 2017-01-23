@@ -4,11 +4,15 @@ class User {
   // Parameters
   // ----------
   
+  // skeleton parameters (from kinect)
+  
   color cChest;
   String cChestName;
   PVector chestPosn;
   PVector lHandPosn;
   PVector rHandPosn;
+  
+  // node + attractor parameters
   
   OriginNode[] nodes;
   
@@ -21,6 +25,10 @@ class User {
   int gridSize;
   float attractorStrength = 3;
   int nodeSize = 2;
+  
+  // music parameters
+  
+  float beatCount = 0.0;
   
   // -----------
   // Constructor
@@ -126,6 +134,14 @@ class User {
       this.nodes[j].update();
     }
     
+    // update beat.
+    
+    //this.beatCount = sin( map( (this.beatCount + BPF) % 1, 0, 1, 0, (float) Math.PI ) ); 
+    //this.beatCount += 1; // increment since we are in a new frame;
+    //this.beatCount = sin(  );
+    
+    //this.nodeSize = Math.round(map(this.beatCount, 0, 1, 1, 5));
+    
   }
   
   // -------------
@@ -134,14 +150,17 @@ class User {
   
   void draw() {
     
+    // draw each node
+    
     for (int j = 0; j < this.nodes.length; j++) {
-      // draw nodes
       fill(this.cChest);
       rect(this.nodes[j].x, this.nodes[j].y, nodeSize, nodeSize);
     }
     
+    // TODO: debug stuff.
+    
     fill(255, 0, 0);
-    text(this.cChestName, 50, 70);
+    text(this.beatCount, 50, 70);
   }
   
 }

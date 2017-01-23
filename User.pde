@@ -37,10 +37,10 @@ class User {
     this.lHandPosn = lHandPosn;
     this.rHandPosn = rHandPosn;
     
-    this.gridSize = Math.round(random(200, 501));
+    this.gridSize = Math.round(random(200, 901));
     
-    xCount = Math.round(random(50, 251));
-    yCount = Math.round(random(50, 251));
+    xCount = Math.round(random(50, 151));
+    yCount = Math.round(random(50, 151));
     
     // note: xCount * yCount
     nodes = new OriginNode[xCount*yCount];
@@ -65,7 +65,7 @@ class User {
         float yPos = y*(gridSize/(this.yCount-1))+(seedHeight-gridSize)/2;
         this.nodes[i] = new OriginNode(xPos, yPos);
         this.nodes[i].setBoundary(0, 0, width, height);
-        this.nodes[i].setDamping(0.09);  //// 0.0 - 1.0
+        this.nodes[i].setDamping(0.01);  //// 0.0 - 1.0
         i++;
       }
     }
@@ -105,19 +105,19 @@ class User {
     
     for (int j = 0; j < this.nodes.length; j++) {
       if (lHand.getState() == KinectPV2.HandState_Closed) {
-        // repulsion
-        leftAttractor.strength = attractorStrength; 
-      } else {
         // attraction
         leftAttractor.strength = -attractorStrength; 
+      } else {
+        // repulsion
+        leftAttractor.strength = attractorStrength; 
       }
       
       if (rHand.getState() == KinectPV2.HandState_Closed) {
-        // repulsion
-        rightAttractor.strength = attractorStrength; 
-      } else {
         // attraction
         rightAttractor.strength = -attractorStrength; 
+      } else {
+        // repulsion
+        rightAttractor.strength = attractorStrength; 
       }
       
       leftAttractor.attract(this.nodes[j]);

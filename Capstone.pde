@@ -100,7 +100,7 @@ void draw() {
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
 
   // reset the screen.
-  fill(255);
+  fill(0);
   noStroke();
   rect(0,0,width,height);
   
@@ -173,7 +173,10 @@ User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
   // TODO: should be a static function in User class. 
   color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 5);
   // increase exposure of color by 50. TODO: needs more work to be accurate.
-  jointColor = color(red(jointColor) + 50, green(jointColor) + 50, blue(jointColor));
+  int brightness = 70;
+  jointColor = color(red(jointColor) + brightness, 
+                     green(jointColor) + brightness, 
+                     blue(jointColor) + brightness);
   String colorName = getClosestNameFromColor(jointColor);
   int z = getDepthFromJoint(chest);
   

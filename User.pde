@@ -22,9 +22,9 @@ class User {
   int xCount;
   int yCount;
   
-  int gridSize;
+  PVector gridSize;
   float attractorStrength = 3;
-  int nodeSize = 2;
+  int nodeSize = 5;
   
   // music parameters
   
@@ -45,10 +45,10 @@ class User {
     this.lHandPosn = lHandPosn;
     this.rHandPosn = rHandPosn;
     
-    this.gridSize = Math.round(random(200, 901));
+    this.gridSize = new PVector(Math.round(random(1400, displayWidth)), Math.round(random(300, 700)));
     
-    xCount = Math.round(random(50, 151));
-    yCount = Math.round(random(50, 151));
+    xCount = Math.round(random(100, 201));
+    yCount = Math.round(random(20, 31));
     
     // note: xCount * yCount
     nodes = new OriginNode[xCount*yCount];
@@ -63,14 +63,14 @@ class User {
   
   void initNodeGrid() {
     // use a variable height and width to position the nodes randomly within the size of the screen.
-    int seedHeight = Math.round(random(gridSize, height*2));
-    int seedWidth  = Math.round(random(gridSize, width*2));
+    int seedWidth  = Math.round(random(gridSize.x, width*2));
+    int seedHeight = Math.round(random(gridSize.y, height*2));
     
     int i = 0; 
     for (int y = 0; y < this.yCount; y++) {
       for (int x = 0; x < this.xCount; x++) {
-        float xPos = x*(gridSize/(this.xCount-1))+(seedWidth-gridSize)/2;
-        float yPos = y*(gridSize/(this.yCount-1))+(seedHeight-gridSize)/2;
+        float xPos = x*(gridSize.x/(this.xCount-1))+(seedWidth-gridSize.x)/2;
+        float yPos = y*(gridSize.y/(this.yCount-1))+(seedHeight-gridSize.y)/2;
         this.nodes[i] = new OriginNode(xPos, yPos);
         this.nodes[i].setBoundary(0, 0, width, height);
         this.nodes[i].setDamping(0.01);  //// 0.0 - 1.0

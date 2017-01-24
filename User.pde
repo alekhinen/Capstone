@@ -18,6 +18,7 @@ class User {
   
   Attractor leftAttractor;
   Attractor rightAttractor;
+  Attractor chestAttractor;
   
   int xCount;
   int yCount;
@@ -45,7 +46,9 @@ class User {
     this.lHandPosn = lHandPosn;
     this.rHandPosn = rHandPosn;
     
-    this.gridSize = new PVector(Math.round(random(1400, displayWidth)), Math.round(random(300, 700)));
+    // grid size is a vector where x -> width, y -> height
+    this.gridSize = new PVector(Math.round(random(1400, displayWidth)), 
+                                Math.round(random(300, 700)));
     
     xCount = Math.round(random(100, 201));
     yCount = Math.round(random(20, 31));
@@ -57,8 +60,9 @@ class User {
     initNodeGrid();
     
     // setup attractors
-    leftAttractor = new Attractor(0, 0);
+    leftAttractor  = new Attractor(0, 0);
     rightAttractor = new Attractor(0, 0);
+    chestAttractor = new Attractor(0, 0);
   }
   
   void initNodeGrid() {
@@ -89,11 +93,11 @@ class User {
 
     int z = getDepthFromJoint(chest);
     
-    PVector mappedJoint = mapDepthToScreen(chest);
+    PVector mappedChest = mapDepthToScreen(chest);
     PVector mappedLeft  = mapDepthToScreen(lHand);
     PVector mappedRight = mapDepthToScreen(rHand);
     
-    this.chestPosn = new PVector(mappedJoint.x, mappedJoint.y, z);
+    this.chestPosn = new PVector(mappedChest.x, mappedChest.y, z);
     this.lHandPosn = mappedLeft;
     this.rHandPosn = mappedRight;
     
@@ -108,6 +112,9 @@ class User {
     
     rightAttractor.x = this.rHandPosn.x;
     rightAttractor.y = this.rHandPosn.y;
+    
+    chestAttractor.x = this.chestPosn.x;
+    chestAttractor.y = this.chestPosn.y;
     
     // update user node positions.
     
@@ -130,6 +137,7 @@ class User {
       
       leftAttractor.attract(this.nodes[j]);
       rightAttractor.attract(this.nodes[j]);
+      chestAttractor.attract(this.nodes[j]);
   
       this.nodes[j].update();
     }

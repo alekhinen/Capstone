@@ -24,14 +24,9 @@ import netP5.*;
 // ================
 
 KinectPV2 kinect;
-
-OscP5 oscP5;
-NetAddress myRemoteLocation;
+OSC osc;
 
 int FRAME_RATE = 30;
-int BPM = 80;
-float FPB = FRAME_RATE * 60.0 / BPM;
-float BPF = BPM / 60.0 / FRAME_RATE;
 int [] rawDepth;
 PImage imgColor;
 
@@ -65,7 +60,7 @@ void setup() {
   // initialize users.
   users = new ArrayList<User>();
   // initialize OSC.
-  initOsc();
+  osc = new OSC();
   
   stroke(0, 50);
   background(255);
@@ -79,12 +74,6 @@ void initKinect() {
   kinect.enableSkeletonColorMap(true);
 
   kinect.init();
-}
-
-void initOsc() {
-  /* start oscP5, listening for incoming messages at port 8000 */
-  oscP5 = new OscP5(this,12000);
-  myRemoteLocation = new NetAddress("192.168.1.2", 8000);
 }
 
 // ----
@@ -107,7 +96,7 @@ void draw() {
   // reset the users and send a closing message to OSC if users change.
   if (skeletonArray.size() != users.size()) {
     // TODO: should we be closing all the users out whenever one comes or leaves?
-    closingMessage(users);
+    osc.closingMessage(users);
     users = new ArrayList<User>();
   }
   
@@ -142,7 +131,7 @@ void draw() {
   // send OSC message about User.
   for (int i = 0; i < users.size(); i++) {
     User u = users.get(i);
-    sendMessage(u, i);
+    osc.sendMessage(u, i);
   }
 
   fill(255, 0, 0);

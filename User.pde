@@ -153,10 +153,21 @@ class User {
       rect(this.nodes[j].x, this.nodes[j].y, nodeSize, nodeSize);
     }
     
-    // TODO: debug stuff.
+  }
+  
+  // ----------------
+  // Helper Functions
+  // ----------------
+  
+  double getAverageNodeVelocity() {
+    double result = 0;
     
-    fill(255, 0, 0);
-    text(this.beatCount, 50, 70);
+    for (int j = 0; j < this.nodes.length; j++) {
+      result += Math.sqrt( Math.pow(this.nodes[j].velocity.x, 2)  + Math.pow(this.nodes[j].velocity.y, 2) );
+    }
+    
+    result = result / this.nodes.length;
+    return result;
   }
   
 }

@@ -27,10 +27,6 @@ class User {
   float attractorStrength = 3;
   int nodeSize = 5;
   
-  // music parameters
-  
-  float beatCount = 0.0;
-  
   // -----------
   // Constructor
   // -----------

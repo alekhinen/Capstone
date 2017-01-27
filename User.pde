@@ -142,14 +142,6 @@ class User {
       this.nodes[j].update();
     }
     
-    // update beat.
-    
-    //this.beatCount = sin( map( (this.beatCount + BPF) % 1, 0, 1, 0, (float) Math.PI ) ); 
-    //this.beatCount += 1; // increment since we are in a new frame;
-    //this.beatCount = sin(  );
-    
-    //this.nodeSize = Math.round(map(this.beatCount, 0, 1, 1, 5));
-    
   }
   
   // -------------

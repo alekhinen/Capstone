@@ -41,19 +41,21 @@ class OSC {
     OscMessage rgbColor = new OscMessage(oscId + "rgbColor");
     rgbColor.add(new float [] {red(u.cChest), green(u.cChest), blue(u.cChest)});
     oscP5.send(rgbColor, myRemoteLocation);
+        
+    // send leftAttractor strength
+    OscMessage lAttractor = new OscMessage(oscId + "leftAttractor");
+    lAttractor.add(u.leftAttractor.strength);
+    oscP5.send(lAttractor, myRemoteLocation);
     
-    // send the (x, y, z) coord of the user's chest.
-    OscMessage coordMsg = new OscMessage(oscId + "coord");
-    coordMsg.add(new float [] {u.chestPosn.x, u.chestPosn.y, u.chestPosn.z});
-    oscP5.send(coordMsg, myRemoteLocation);
+    // send rightAttractor strength
+    OscMessage rAttractor = new OscMessage(oscId + "rightAttractor");
+    rAttractor.add(u.rightAttractor.strength);
+    oscP5.send(rAttractor, myRemoteLocation);
     
-    OscMessage lHandMsg = new OscMessage(oscId + "lHandCoord");
-    lHandMsg.add(new float [] {u.lHandPosn.x, u.lHandPosn.y});
-    oscP5.send(lHandMsg, myRemoteLocation);
-    
-    OscMessage rHandMsg = new OscMessage(oscId + "rHandCoord");
-    rHandMsg.add(new float [] {u.rHandPosn.x, u.rHandPosn.y});
-    oscP5.send(rHandMsg, myRemoteLocation);
+    // send average node velocity
+    OscMessage nodeVelocity = new OscMessage(oscId + "nodeVelocity");
+    nodeVelocity.add(u.getAverageNodeVelocity());
+    oscP5.send(nodeVelocity, myRemoteLocation);
   }
   
   /** 

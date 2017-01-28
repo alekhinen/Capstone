@@ -153,21 +153,25 @@ class User {
       rect(this.nodes[j].x, this.nodes[j].y, nodeSize, nodeSize);
     }
     
+    fill(255,0,0);
+    text(Math.round(this.getAverageNodeVelocity() * 1000), 50, 70);
   }
   
   // ----------------
   // Helper Functions
   // ----------------
   
-  double getAverageNodeVelocity() {
+  /*
+   * @description returns the average velocity for this user's nodes.
+   * @note seems to always be in the range of [0 - 4].
+   */
+  public double getAverageNodeVelocity() {    
     double result = 0;
-    
-    for (int j = 0; j < this.nodes.length; j++) {
-      result += Math.sqrt( Math.pow(this.nodes[j].velocity.x, 2)  + Math.pow(this.nodes[j].velocity.y, 2) );
+    for (int j = 0; j < nodes.length; j++) {
+      double velocity = Math.sqrt( Math.pow(nodes[j].velocity.x, 2) + Math.pow(nodes[j].velocity.y, 2) );
+      result += velocity;
     }
-    
-    result = result / this.nodes.length;
+    result = result / nodes.length;
     return result;
   }
-  
 }

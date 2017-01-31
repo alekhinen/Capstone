@@ -116,18 +116,20 @@ class User {
     
     for (int j = 0; j < this.nodes.length; j++) {
       if (lHand.getState() == KinectPV2.HandState_Closed) {
-        // attraction
-        leftAttractor.strength = -attractorStrength; 
+        // spiral repulsor
+        leftAttractor.strength = attractorStrength;
+        leftAttractor.setMode(2);
       } else {
-        // repulsion
+        // attractor
         leftAttractor.strength = attractorStrength; 
+        leftAttractor.setMode(1);
       }
       
       if (rHand.getState() == KinectPV2.HandState_Closed) {
-        // attraction
-        rightAttractor.strength = -attractorStrength; 
+        // super-strong attractor
+        rightAttractor.strength = attractorStrength * 4; 
       } else {
-        // repulsion
+        // attractor
         rightAttractor.strength = attractorStrength; 
       }
       

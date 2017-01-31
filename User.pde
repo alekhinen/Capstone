@@ -49,8 +49,21 @@ class User {
     xCount = Math.round(random(100, 201));
     yCount = Math.round(random(20, 31));
     
+    int newXCount = 0;
+    int nodeMidHeight = yCount / 2;
+    for (int y = 0; y < yCount; y++) {
+      int newY = y;
+      if (y > nodeMidHeight) {
+        newY = this.yCount - y;
+      }
+      float ratio = newY / nodeMidHeight;
+      int xCountRow = Math.round(ratio * this.xCount);
+      newXCount += xCountRow;
+    }
+    
+    
     // note: xCount * yCount
-    nodes = new OriginNode[xCount*yCount];
+    nodes = new OriginNode[newXCount];
     
     // setup node grid
     initNodeGrid();
@@ -67,9 +80,18 @@ class User {
     int seedHeight = Math.round(random(gridSize.y, height*2));
     
     int i = 0; 
+    int nodeMidHeight = this.yCount / 2;
     for (int y = 0; y < this.yCount; y++) {
-      for (int x = 0; x < this.xCount; x++) {
-        float xPos = x*(gridSize.x/(this.xCount-1))+(seedWidth-gridSize.x)/2;
+      
+      int newY = y;
+      if (y > nodeMidHeight) {
+        newY = this.yCount - y;
+      }
+      float ratio = newY / nodeMidHeight;
+      int xCountRow = Math.round(ratio * this.xCount);
+
+      for (int x = 0; x < xCountRow; x++) {
+        float xPos = x*(gridSize.x/(xCountRow-1))+(seedWidth-gridSize.x)/2;
         float yPos = y*(gridSize.y/(this.yCount-1))+(seedHeight-gridSize.y)/2;
         this.nodes[i] = new OriginNode(xPos, yPos);
         this.nodes[i].setBoundary(0, 0, width, height);

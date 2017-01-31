@@ -45,25 +45,26 @@ class User {
     // grid size is a vector where x -> width, y -> height
     this.gridSize = new PVector(Math.round(random(1400, displayWidth)), 
                                 Math.round(random(300, 700)));
+    this.gridSize.x = this.gridSize.y;
     
     xCount = Math.round(random(100, 201));
     yCount = Math.round(random(20, 31));
     
-    int newXCount = 0;
+    int totalCount = 0;
     int nodeMidHeight = yCount / 2;
     for (int y = 0; y < yCount; y++) {
       int newY = y;
       if (y > nodeMidHeight) {
         newY = this.yCount - y;
       }
-      float ratio = newY / nodeMidHeight;
+      float ratio = (newY * 1.0) / (nodeMidHeight * 1.0);
       int xCountRow = Math.round(ratio * this.xCount);
-      newXCount += xCountRow;
+      totalCount += xCountRow;
     }
     
     
     // note: xCount * yCount
-    nodes = new OriginNode[newXCount];
+    nodes = new OriginNode[totalCount];
     
     // setup node grid
     initNodeGrid();
@@ -76,8 +77,8 @@ class User {
   
   void initNodeGrid() {
     // use a variable height and width to position the nodes randomly within the size of the screen.
-    int seedWidth  = Math.round(random(gridSize.x, width*2));
-    int seedHeight = Math.round(random(gridSize.y, height*2));
+    int seedWidth  = Math.round(random(gridSize.x, width));
+    int seedHeight = Math.round(random(gridSize.y, height));
     
     int i = 0; 
     int nodeMidHeight = this.yCount / 2;
@@ -87,11 +88,12 @@ class User {
       if (y > nodeMidHeight) {
         newY = this.yCount - y;
       }
-      float ratio = newY / nodeMidHeight;
+      float ratio = (newY * 1.0) / (nodeMidHeight * 1.0);
       int xCountRow = Math.round(ratio * this.xCount);
+      System.out.println("xCountRow: " + str(xCountRow));
 
       for (int x = 0; x < xCountRow; x++) {
-        float xPos = x*(gridSize.x/(xCountRow-1))+(seedWidth-gridSize.x)/2;
+        float xPos = x*((gridSize.x * ratio)/(xCountRow-1))+(seedWidth-(gridSize.x * ratio))/2;
         float yPos = y*(gridSize.y/(this.yCount-1))+(seedHeight-gridSize.y)/2;
         this.nodes[i] = new OriginNode(xPos, yPos);
         this.nodes[i].setBoundary(0, 0, width, height);

@@ -43,8 +43,8 @@ public class OriginNode extends Node {
   // functions
   
   public void update() {
-    boolean velocityStopped = (velocity.x <= 0.01 && velocity.x >= -0.01) 
-      && (velocity.y <= 0.01 && velocity.y >= -0.01);
+    boolean velocityStopped = (velocity.x <= 0.09 && velocity.x >= -0.09) 
+      && (velocity.y <= 0.09 && velocity.y >= -0.09);
     
     if (isReturning) {
       x += returnVelocity.x;

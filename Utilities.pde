@@ -31,46 +31,6 @@ String getClosestNameFromColor(color c) {
     }
   }
   return bestName;
-};
-
-/** 
- * @description: Gets the average color in a radius for a point from the HD color image.
- * @returns color
- */
-color getColorInRadius(int x, int y, int radius) {
-  // Ensure these coordinates don't go outside their bounds (e.g. 0-1920, 0-1080).
-  int lowerX = Math.max((x - radius), 0);
-  int upperX = Math.min((x + radius), 1920);
-  
-  int lowerY = Math.max((y - radius), 0);
-  int upperY = Math.min((y + radius), 1080);
-  
-  int increment = 1;
-  int r = 0;
-  int g = 0;
-  int b = 0;
-  
-  // sum the color values.
-  while (lowerX < upperX) {
-    int newLowerY = lowerY;
-    while (newLowerY < upperY) {
-      color c = imgColor.get(lowerX, newLowerY);
-      r += Math.round(red(c));
-      g += Math.round(green(c));
-      b += Math.round(blue(c));
-      System.out.println(r + " " + g + " " + b);
-      increment += 1;
-      newLowerY += 1;
-    }
-    lowerX += 1;
-  }
-  
-  // divide the sum by the increment to get the average values.
-  r = Math.round(r / increment);
-  g = Math.round(g / increment);
-  b = Math.round(b / increment);
-  
-  return color(r, g, b);
 }
 
 PVector mapDepthToScreen(KJoint joint) {
@@ -82,28 +42,4 @@ PVector mapDepthToScreen(KJoint joint) {
 
 double euclideanDistance(PVector a, PVector b) {
   return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2));
-}
-
-/*
-Different hand state
- KinectPV2.HandState_Open
- KinectPV2.HandState_Closed
- KinectPV2.HandState_Lasso
- KinectPV2.HandState_NotTracked
- */
-void handState(int handState) {
-  switch(handState) {
-  case KinectPV2.HandState_Open:
-    fill(0, 255, 0);
-    break;
-  case KinectPV2.HandState_Closed:
-    fill(255, 0, 0);
-    break;
-  case KinectPV2.HandState_Lasso:
-    fill(0, 0, 255);
-    break;
-  case KinectPV2.HandState_NotTracked:
-    fill(255, 255, 255);
-    break;
-  }
 }

@@ -28,7 +28,6 @@ OSC osc;
 
 int FRAME_RATE = 30;
 int [] rawDepth;
-PImage imgColor;
 
 // static list of colors.
 SonicColor [] sonicColors = {
@@ -63,7 +62,7 @@ void setup() {
   osc = new OSC();
   
   stroke(0, 50);
-  background(255);
+  background(0);
 }
 
 void initKinect() {
@@ -133,22 +132,6 @@ void draw() {
 
   fill(255, 0, 0);
   text(frameRate, 50, 50);
-}
-
-// draw hand state
-void drawHandState(KJoint joint) {
-  noStroke();
-  handState(joint.getState());
-  
-  PVector mappedJoint = mapDepthToScreen(joint); 
-  
-  // draws the chest as a circle with the user's color.
-  pushMatrix();
-  translate(mappedJoint.x, mappedJoint.y, 0);
-  //fill(u.cChest); perhaps this should be the color of the user.
-  ellipse(0, 0, 30, 30);
-  popMatrix();
-  
 }
 
 // ----------

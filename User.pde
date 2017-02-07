@@ -36,7 +36,9 @@ class User {
        PVector chestPosn, 
        PVector lHandPosn, 
        PVector rHandPosn) {
-    this.cChest = cChest;
+    this.cChest = color(Math.round(random(100, 255)), 
+                        Math.round(random(100, 255)), 
+                        Math.round(random(100, 255)), 100);
     this.cChestName = cChestName;
     this.chestPosn = chestPosn;
     this.lHandPosn = lHandPosn;
@@ -44,7 +46,7 @@ class User {
     
     // grid size is a vector where x -> width, y -> height
     this.gridSize = new PVector(Math.round(random(1400, displayWidth)), 
-                                Math.round(random(300, 700)));
+                                Math.round(random(300, displayHeight)));
     this.gridSize.x = this.gridSize.y;
     
     xCount = Math.round(random(100, 201));

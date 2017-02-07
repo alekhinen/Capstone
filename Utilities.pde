@@ -7,14 +7,14 @@
  * @returns integer value between [0 - 4500]
  */
 int getDepthFromJoint(KJoint joint) {
-  // map the (x, y) from joint from color space to depth space.
-  // note 1: this is a rough conversion that does not take into account that the placement
-  //         of the depth sensor and camera sensor are different (so it's not a clean mapping).
-  // note 2: (x, y) can go negative. workaround is to use the max of either 0 or the coordinate value.
-  // note 3: joint.getZ() always returns 0 which is why we need the depth value.
-  int x = Math.min(Math.max(Math.round(map(joint.getX(), 0, 1920, 0, 512)), 0), 512); 
-  int y = Math.min(Math.max(Math.round(map(joint.getY(), 0, 1080, 0, 424)), 0), 423); 
-  return rawDepth[x+(512*y)];
+  // map the (x, y) from depth joint to find Z from depth image.
+  // note 1: (x, y) can go negative. workaround is to use the max of either 0 or the coordinate value.
+  //                (but really we're just using the absolute value..)
+  // note 2: joint.getZ() always returns 0 which is why we need the depth value.
+  int x = Math.abs(Math.round(joint.getX()));
+  int y = Math.abs(Math.round(joint.getY()));
+  int z = rawDepth[x+(512*y)];
+  return z;
 }
 
 /**
@@ -74,8 +74,8 @@ color getColorInRadius(int x, int y, int radius) {
 }
 
 PVector mapDepthToScreen(KJoint joint) {
-  int x = Math.round(map(joint.getX(), 0, 1920, 0, displayWidth));
-  int y = Math.round(map(joint.getY(), 0, 1080, 0, displayHeight));
+  int x = Math.round(map(joint.getX(), 0, 512, 0, displayWidth));
+  int y = Math.round(map(joint.getY(), 0, 424, 0, displayHeight));
   int z = Math.round(joint.getZ());
   return new PVector(x, y, z);
 }

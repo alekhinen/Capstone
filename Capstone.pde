@@ -70,8 +70,7 @@ void initKinect() {
   kinect = new KinectPV2(this);
 
   kinect.enableDepthImg(true);
-  kinect.enableColorImg(true);
-  kinect.enableSkeletonColorMap(true);
+  kinect.enableSkeletonDepthMap(true);
 
   kinect.init();
 }
@@ -83,10 +82,8 @@ void initKinect() {
 void draw() {
   // raw depth contains values [0 - 4500]in a one dimensional 512x424 array.
   rawDepth = kinect.getRawDepthData();
-  // color image from the kinect.
-  imgColor = kinect.getColorImage();
   // skeletons (aka users)
-  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonDepthMap();
 
   // reset the screen.
   fill(0);
@@ -159,23 +156,13 @@ void drawHandState(KJoint joint) {
 // ----------
 
 User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
-  // TODO: should be a static function in User class. 
-  color jointColor = getColorInRadius(Math.round(chest.getX()), Math.round(chest.getY()), 5);
-  // increase exposure of color by 50. TODO: needs more work to be accurate.
-  int brightness = 70;
-  jointColor = color(red(jointColor) + brightness, 
-                     green(jointColor) + brightness, 
-                     blue(jointColor) + brightness);
-  String colorName = getClosestNameFromColor(jointColor);
-  int z = getDepthFromJoint(chest);
   
+  int z = getDepthFromJoint(chest);
   PVector mappedJoint = mapDepthToScreen(chest);
   PVector mappedLeft  = mapDepthToScreen(lHand);
   PVector mappedRight = mapDepthToScreen(rHand);
   
-  return new User(jointColor, 
-                  colorName, 
-                  new PVector(mappedJoint.x, mappedJoint.y, z),
+  return new User(new PVector(mappedJoint.x, mappedJoint.y, z),
                   mappedLeft,
                   mappedRight);
 }

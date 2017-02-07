@@ -31,15 +31,13 @@ class User {
   // Constructor
   // -----------
   
-  User(color cChest, 
-       String cChestName, 
-       PVector chestPosn, 
+  User(PVector chestPosn, 
        PVector lHandPosn, 
        PVector rHandPosn) {
     this.cChest = color(Math.round(random(100, 255)), 
                         Math.round(random(100, 255)), 
                         Math.round(random(100, 255)), 100);
-    this.cChestName = cChestName;
+    this.cChestName = getClosestNameFromColor(this.cChest);
     this.chestPosn = chestPosn;
     this.lHandPosn = lHandPosn;
     this.rHandPosn = rHandPosn;

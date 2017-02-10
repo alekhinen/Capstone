@@ -13,7 +13,7 @@ int getDepthFromJoint(KJoint joint) {
   // note 2: joint.getZ() always returns 0 which is why we need the depth value.
   int x = Math.abs(Math.round(joint.getX()));
   int y = Math.abs(Math.round(joint.getY()));
-  int z = rawDepth[x+(512*y)];
+  int z = rawDepth[x+(512*y)]; // todo: this keeps on breaking (going out of bounds??)
   return z;
 }
 

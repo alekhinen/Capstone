@@ -54,7 +54,7 @@ class OSC {
     
     // send average node velocity
     OscMessage nodeVelocity = new OscMessage(oscId + "nodeVelocity");
-    nodeVelocity.add(u.getAverageNodeVelocity());
+    nodeVelocity.add(Math.round(u.getAverageNodeVelocity() * 1000));
     oscP5.send(nodeVelocity, myRemoteLocation);
   }
   

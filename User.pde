@@ -15,7 +15,8 @@ class User {
   // node + attractor parameters
   
   OriginNode[] nodes;
-  int gatheredNodes = 0;
+  ArrayList<Integer> gatheredNodes = new ArrayList<Integer>();
+  boolean hasBurst = false;
   
   Attractor leftAttractor;
   Attractor rightAttractor;
@@ -132,9 +133,21 @@ class User {
     
     this.updateAttractors(lHand, rHand);
     
-    // reset gathered nodes
+    // reset gathered nodes + burst
     
-    this.gatheredNodes = 0;
+    // clear out all nodes past the 30th element.
+    int gatheredLength = this.gatheredNodes.size();
+    if (gatheredLength > 30) {
+      this.gatheredNodes = new ArrayList<Integer>(this.gatheredNodes.subList(0, 30));
+      gatheredLength = 30;
+    }
+    
+    // get the last element.
+    int previouslyGathered = 0;
+    if (gatheredLength > 0) {
+      previouslyGathered = this.gatheredNodes.get(gatheredLength - 1);
+    }
+    int currentlyGatheredNodes = 0;
     
     // update the user's node positions.
     
@@ -146,15 +159,19 @@ class User {
       chestAttractor.attract(currentNode);
       
       if (leftAttractor.dist(currentNode) < leftAttractor.radius) {
-        this.gatheredNodes += 1;
+        currentlyGatheredNodes += 1;
       } else if (rightAttractor.dist(currentNode) < rightAttractor.radius) {
-        this.gatheredNodes += 1;
+        currentlyGatheredNodes += 1;
       } else if (chestAttractor.dist(currentNode) < chestAttractor.radius) {
-        this.gatheredNodes += 1;
+        currentlyGatheredNodes += 1;
       }
   
       this.nodes[j].update();
     }
+    
+    // add the current amount to the beginning of the list
+    this.gatheredNodes.add(0, currentlyGatheredNodes);
+    this.hasBurst = previouslyGathered - currentlyGatheredNodes > 300;
     
   }
   
@@ -208,7 +225,13 @@ class User {
     fill(255,0,0);
     text(Math.round(this.getAverageNodeVelocity() * 1000), 50, 70);
     
-    text(Math.round(this.gatheredNodes), 50, 100);
+    if (this.gatheredNodes.size() > 0) {
+      text(Math.round(this.gatheredNodes.get(0)), 50, 90);
+    }
+    if (this.gatheredNodes.size() >= 30) {
+      text(Math.round(this.gatheredNodes.get(29)), 50, 105);
+    }
+    text(str(this.hasBurst), 50, 120);
   }
   
   // ----------------

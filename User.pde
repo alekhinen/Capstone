@@ -15,6 +15,7 @@ class User {
   // node + attractor parameters
   
   OriginNode[] nodes;
+  int gatheredNodes = 0;
   
   Attractor leftAttractor;
   Attractor rightAttractor;
@@ -129,6 +130,38 @@ class User {
     
     // update attractor positions.
     
+    this.updateAttractors(lHand, rHand);
+    
+    // reset gathered nodes
+    
+    this.gatheredNodes = 0;
+    
+    // update the user's node positions.
+    
+    for (int j = 0; j < this.nodes.length; j++) {
+      OriginNode currentNode = this.nodes[j];
+      
+      leftAttractor.attract(currentNode);
+      rightAttractor.attract(currentNode);
+      chestAttractor.attract(currentNode);
+      
+      if (leftAttractor.dist(currentNode) < leftAttractor.radius) {
+        this.gatheredNodes += 1;
+      } else if (rightAttractor.dist(currentNode) < rightAttractor.radius) {
+        this.gatheredNodes += 1;
+      } else if (chestAttractor.dist(currentNode) < chestAttractor.radius) {
+        this.gatheredNodes += 1;
+      }
+  
+      this.nodes[j].update();
+    }
+    
+  }
+  
+  void updateAttractors(KJoint lHand, KJoint rHand) {
+    
+    // update positions
+    
     leftAttractor.x = this.lHandPosn.x;
     leftAttractor.y = this.lHandPosn.y;
     
@@ -138,10 +171,9 @@ class User {
     chestAttractor.x = this.chestPosn.x;
     chestAttractor.y = this.chestPosn.y;
     
-    // update user node positions.
+    // update state and strength
     
-    for (int j = 0; j < this.nodes.length; j++) {
-      if (lHand.getState() == KinectPV2.HandState_Closed) {
+    if (lHand.getState() == KinectPV2.HandState_Closed) {
         // spiral repulsor
         leftAttractor.strength = attractorStrength;
         leftAttractor.setMode(2);
@@ -158,14 +190,6 @@ class User {
         // attractor
         rightAttractor.strength = attractorStrength; 
       }
-      
-      leftAttractor.attract(this.nodes[j]);
-      rightAttractor.attract(this.nodes[j]);
-      chestAttractor.attract(this.nodes[j]);
-  
-      this.nodes[j].update();
-    }
-    
   }
   
   // -------------
@@ -183,6 +207,8 @@ class User {
     
     fill(255,0,0);
     text(Math.round(this.getAverageNodeVelocity() * 1000), 50, 70);
+    
+    text(Math.round(this.gatheredNodes), 50, 100);
   }
   
   // ----------------

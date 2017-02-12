@@ -49,7 +49,7 @@ class OSC {
     
     // send gathered node count
     OscMessage gatheredNodes = new OscMessage(oscId + "gatheredNodes");
-    gatheredNodes.add(u.getCurrentGatheredNodes());
+    gatheredNodes.add(u.getGatheredNodesProportion());
     oscP5.send(gatheredNodes, myRemoteLocation);
     
     // send burst (if burst)

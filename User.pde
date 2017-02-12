@@ -232,6 +232,7 @@ class User {
       text(Math.round(this.gatheredNodes.get(29)), 50, 105);
     }
     text(str(this.hasBurst), 50, 120);
+    text(str(this.getGatheredNodesProportion()), 50, 140);
   }
   
   // ----------------
@@ -253,14 +254,18 @@ class User {
   }
   
   /*
-   * @description returns the amount of currently gathered nodes.
+   * @description returns the proportion of currently gathered nodes.
+   * @note returns anywhere from 0 to 100.
    */
-  public int getCurrentGatheredNodes() {
+  public int getGatheredNodesProportion() {
+    int amountNodes = this.nodes.length;
+    int amountGathered = 0;
+    
     if (this.gatheredNodes.size() > 0) {
-      return this.gatheredNodes.get(0);
-    } else {
-      return 0;
+      amountGathered = this.gatheredNodes.get(0);
     }
+    
+    return Math.round(((float) amountGathered / amountNodes) * 100);
   }
   
 }

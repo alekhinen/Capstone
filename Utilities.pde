@@ -8,11 +8,12 @@
  */
 int getDepthFromJoint(KJoint joint) {
   // map the (x, y) from depth joint to find Z from depth image.
-  // note 1: (x, y) can go negative. workaround is to use the max of either 0 or the coordinate value.
-  //                (but really we're just using the absolute value..)
+  // note 1: (x, y) can go negative or beyond the upper limit. 
+  //                workaround is to use the max of either 0 or the coordinate value
+  //                and the min of the bound or coordinate value.
   // note 2: joint.getZ() always returns 0 which is why we need the depth value.
-  int x = Math.abs(Math.round(joint.getX()));
-  int y = Math.abs(Math.round(joint.getY()));
+  int x = Math.min(Math.max(Math.round(joint.getX()), 0), 512);
+  int y = Math.min(Math.max(Math.round(joint.getY()), 0), 423);
   int z = rawDepth[x+(512*y)]; // todo: this keeps on breaking (going out of bounds??)
   return z;
 }

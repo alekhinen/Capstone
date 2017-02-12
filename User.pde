@@ -251,4 +251,16 @@ class User {
     result = result / nodes.length;
     return result;
   }
+  
+  /*
+   * @description returns the amount of currently gathered nodes.
+   */
+  public int getCurrentGatheredNodes() {
+    if (this.gatheredNodes.size() > 0) {
+      return this.gatheredNodes.get(0);
+    } else {
+      return 0;
+    }
+  }
+  
 }

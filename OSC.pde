@@ -31,16 +31,6 @@ class OSC {
    */
   void sendMessage(User u, int id) {
     String oscId = "/" + str(id) + "/";
-    
-    // send name of the user's chest color.
-    OscMessage colorName = new OscMessage(oscId + "colorName");
-    colorName.add(u.cChestName);
-    oscP5.send(colorName, myRemoteLocation);
-    
-    // send rgb value of the user's chest color
-    OscMessage rgbColor = new OscMessage(oscId + "rgbColor");
-    rgbColor.add(new float [] {red(u.cChest), green(u.cChest), blue(u.cChest)});
-    oscP5.send(rgbColor, myRemoteLocation);
         
     // send leftAttractor strength
     OscMessage lAttractor = new OscMessage(oscId + "leftAttractor");
@@ -56,6 +46,19 @@ class OSC {
     OscMessage nodeVelocity = new OscMessage(oscId + "nodeVelocity");
     nodeVelocity.add(Math.round(u.getAverageNodeVelocity() * 1000));
     oscP5.send(nodeVelocity, myRemoteLocation);
+    
+    // send gathered node count
+    OscMessage gatheredNodes = new OscMessage(oscId + "gatheredNodes");
+    gatheredNodes.add(u.getCurrentGatheredNodes());
+    oscP5.send(gatheredNodes, myRemoteLocation);
+    
+    // send burst (if burst)
+    if (u.hasBurst) {
+      OscMessage hasBurst = new OscMessage(oscId + "hasBurst");
+      hasBurst.add("burst!!!");
+      oscP5.send(hasBurst, myRemoteLocation);
+    }
+    
   }
   
   /** 

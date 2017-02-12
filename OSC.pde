@@ -69,6 +69,7 @@ class OSC {
     for (int i = 0; i < users.size(); i++) {
       String oscId = "/" + str(i) + "/";
       OscMessage close = new OscMessage(oscId + "close");
+      close.add(0);
       oscP5.send(close, myRemoteLocation);
     }
   }

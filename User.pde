@@ -79,9 +79,9 @@ class User {
   }
   
   void initNodeGrid() {
-    // use a variable height and width to position the nodes randomly within the size of the screen.
-    int seedWidth  = Math.round(random(gridSize.x, width));
-    int seedHeight = Math.round(random(gridSize.y, height));
+    // use the chest position as the basis for the position of the user's nodes.
+    int seedWidth  = Math.round(this.chestPosn.x + (gridSize.x / 2));
+    int seedHeight = Math.round(this.chestPosn.y + (gridSize.y / 2));
     
     // diamond generator (same as in the constructor).
     int i = 0; 

@@ -9,6 +9,7 @@ class OSC {
 
   OscP5 oscP5;
   NetAddress myRemoteLocation;
+  boolean hasOpened = false;
   
   // ------------
   // Constructors
@@ -17,7 +18,7 @@ class OSC {
   public OSC() {
     /* start oscP5, listening for incoming messages at port 8000 */
     oscP5 = new OscP5(this,12000);
-    myRemoteLocation = new NetAddress("192.168.1.2", 8000);
+    myRemoteLocation = new NetAddress("192.168.1.4", 8000);
   }
   
   // ---------
@@ -62,6 +63,18 @@ class OSC {
   }
   
   /** 
+   * @description sends an opening message exactly once.
+   */
+  void openingMessage() {
+    if (!hasOpened) {
+      OscMessage open = new OscMessage("/open");
+      open.add(1);
+      oscP5.send(open, myRemoteLocation);
+      hasOpened = true;
+    }
+  }
+  
+  /** 
    * @description sends a closing message to OSC for all given users.
    * @arg Listof User users: the users to close out
    */
@@ -72,6 +85,8 @@ class OSC {
       close.add(0);
       oscP5.send(close, myRemoteLocation);
     }
+    // allow for opening message to be sent.
+    hasOpened = false;
   }
   
 }

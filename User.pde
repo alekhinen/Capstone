@@ -164,12 +164,15 @@ class User {
       if (leftAttractor.dist(currentNode) < leftAttractor.radius) {
         currentlyGatheredNodes += 1;
         currentNode.toOpacity = 255;
+        currentNode.inField = true;
       } else if (rightAttractor.dist(currentNode) < rightAttractor.radius) {
         currentlyGatheredNodes += 1;
-        currentNode.toOpacity = 255;  
+        currentNode.toOpacity = 255;
+        currentNode.inField = true;
       } else if (chestAttractor.dist(currentNode) < chestAttractor.radius) {
         currentlyGatheredNodes += 1;
         currentNode.toOpacity = 255;
+        currentNode.inField = true;
       } else {
         currentNode.resetOpacity();
       }

@@ -10,6 +10,8 @@ public class OriginNode extends Node {
   final int baseOpacity = 128;
   int toOpacity = 128;
   int opacity = 128;
+  boolean inField = false;
+  boolean triggered = false;
   
   // ------ constructors ------
   
@@ -78,16 +80,17 @@ public class OriginNode extends Node {
     // since we are updating the toOpacity on every frame most likely, 
     // we know that whenver the opacity is above the base, the toOpacity
     // needs to stay bottomed out regardless of who is updating the value.
-    if (this.opacity > this.baseOpacity) {
+    if (this.opacity > this.baseOpacity || this.triggered) {
       this.toOpacity = this.baseOpacity;
     }
     
     if (this.toOpacity > this.opacity) {
       // shoot the value all the way up.
       this.opacity = this.toOpacity;
+      this.triggered = true;
     } else if (this.opacity > this.toOpacity) {
       // slowly transition back down.
-      this.opacity -= 15;
+      this.opacity -= 25;
     } else {
       // if we've gone too far, return back to the base.
       this.opacity = this.baseOpacity;
@@ -97,6 +100,8 @@ public class OriginNode extends Node {
   void resetOpacity() {
     this.toOpacity = this.baseOpacity;
     this.opacity   = this.baseOpacity;
+    this.inField   = false; // todo: field not needed.
+    this.triggered = false;
   }
   
 }

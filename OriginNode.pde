@@ -7,6 +7,8 @@ public class OriginNode extends Node {
   boolean isReturning;
   PVector returnVelocity = new PVector();
   
+  int opacity = 128;
+  
   // ------ constructors ------
   
   public OriginNode() {

@@ -38,7 +38,8 @@ class User {
        PVector rHandPosn) {
     this.cChest = color(Math.round(random(100, 255)), 
                         Math.round(random(100, 255)), 
-                        Math.round(random(100, 255)), 100);
+                        Math.round(random(100, 255)), 
+                        128);
     this.cChestName = getClosestNameFromColor(this.cChest);
     this.chestPosn = chestPosn;
     this.lHandPosn = lHandPosn;
@@ -153,6 +154,7 @@ class User {
     
     for (int j = 0; j < this.nodes.length; j++) {
       OriginNode currentNode = this.nodes[j];
+      currentNode.opacity = 128;
       
       leftAttractor.attract(currentNode);
       rightAttractor.attract(currentNode);
@@ -160,10 +162,13 @@ class User {
       
       if (leftAttractor.dist(currentNode) < leftAttractor.radius) {
         currentlyGatheredNodes += 1;
+        currentNode.opacity = 255;
       } else if (rightAttractor.dist(currentNode) < rightAttractor.radius) {
         currentlyGatheredNodes += 1;
+        currentNode.opacity = 255;  
       } else if (chestAttractor.dist(currentNode) < chestAttractor.radius) {
         currentlyGatheredNodes += 1;
+        currentNode.opacity = 255;
       }
   
       this.nodes[j].update();
@@ -216,12 +221,18 @@ class User {
   void draw() {
     
     // draw each node
-    
-    for (int j = 0; j < this.nodes.length; j++) {
-      fill(this.cChest);
-      rect(this.nodes[j].x, this.nodes[j].y, nodeSize, nodeSize);
+    for (OriginNode currentNode : this.nodes) {
+      fill(red(this.cChest), green(this.cChest), blue(this.cChest), currentNode.opacity);
+      rect(currentNode.x, currentNode.y, nodeSize, nodeSize);
     }
     
+    drawDebug();
+  }
+  
+  /*
+   * @description draws text related to debugging the program. 
+   */
+  void drawDebug() {
     fill(255,0,0);
     text(Math.round(this.getAverageNodeVelocity() * 1000), 50, 70);
     

@@ -154,21 +154,24 @@ class User {
     
     for (int j = 0; j < this.nodes.length; j++) {
       OriginNode currentNode = this.nodes[j];
-      currentNode.opacity = 128;
       
       leftAttractor.attract(currentNode);
       rightAttractor.attract(currentNode);
       chestAttractor.attract(currentNode);
       
+      // todo: the toOpacity should be refactored somehow...
+      
       if (leftAttractor.dist(currentNode) < leftAttractor.radius) {
         currentlyGatheredNodes += 1;
-        currentNode.opacity = 255;
+        currentNode.toOpacity = 255;
       } else if (rightAttractor.dist(currentNode) < rightAttractor.radius) {
         currentlyGatheredNodes += 1;
-        currentNode.opacity = 255;  
+        currentNode.toOpacity = 255;  
       } else if (chestAttractor.dist(currentNode) < chestAttractor.radius) {
         currentlyGatheredNodes += 1;
-        currentNode.opacity = 255;
+        currentNode.toOpacity = 255;
+      } else {
+        currentNode.resetOpacity();
       }
   
       this.nodes[j].update();
@@ -214,9 +217,9 @@ class User {
       }
   }
   
-  // -------------
-  // ??? Functions
-  // -------------
+  // --------------
+  // Draw Functions
+  // --------------
   
   void draw() {
     

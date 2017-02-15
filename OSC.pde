@@ -9,6 +9,7 @@ class OSC {
 
   OscP5 oscP5;
   NetAddress myRemoteLocation;
+  boolean hasOpened = false;
   
   // ------------
   // Constructors
@@ -17,7 +18,7 @@ class OSC {
   public OSC() {
     /* start oscP5, listening for incoming messages at port 8000 */
     oscP5 = new OscP5(this,12000);
-    myRemoteLocation = new NetAddress("192.168.1.2", 8000);
+    myRemoteLocation = new NetAddress("192.168.1.4", 8000);
   }
   
   // ---------
@@ -31,16 +32,6 @@ class OSC {
    */
   void sendMessage(User u, int id) {
     String oscId = "/" + str(id) + "/";
-    
-    // send name of the user's chest color.
-    OscMessage colorName = new OscMessage(oscId + "colorName");
-    colorName.add(u.cChestName);
-    oscP5.send(colorName, myRemoteLocation);
-    
-    // send rgb value of the user's chest color
-    OscMessage rgbColor = new OscMessage(oscId + "rgbColor");
-    rgbColor.add(new float [] {red(u.cChest), green(u.cChest), blue(u.cChest)});
-    oscP5.send(rgbColor, myRemoteLocation);
         
     // send leftAttractor strength
     OscMessage lAttractor = new OscMessage(oscId + "leftAttractor");
@@ -56,6 +47,31 @@ class OSC {
     OscMessage nodeVelocity = new OscMessage(oscId + "nodeVelocity");
     nodeVelocity.add(Math.round(u.getAverageNodeVelocity() * 1000));
     oscP5.send(nodeVelocity, myRemoteLocation);
+    
+    // send gathered node count
+    OscMessage gatheredNodes = new OscMessage(oscId + "gatheredNodes");
+    gatheredNodes.add(u.getGatheredNodesProportion());
+    oscP5.send(gatheredNodes, myRemoteLocation);
+    
+    // send burst (if burst)
+    if (u.hasBurst) {
+      OscMessage hasBurst = new OscMessage(oscId + "hasBurst");
+      hasBurst.add("burst!!!");
+      oscP5.send(hasBurst, myRemoteLocation);
+    }
+    
+  }
+  
+  /** 
+   * @description sends an opening message exactly once.
+   */
+  void openingMessage() {
+    if (!hasOpened) {
+      OscMessage open = new OscMessage("/open");
+      open.add(1);
+      oscP5.send(open, myRemoteLocation);
+      hasOpened = true;
+    }
   }
   
   /** 
@@ -66,8 +82,11 @@ class OSC {
     for (int i = 0; i < users.size(); i++) {
       String oscId = "/" + str(i) + "/";
       OscMessage close = new OscMessage(oscId + "close");
+      close.add(0);
       oscP5.send(close, myRemoteLocation);
     }
+    // allow for opening message to be sent.
+    hasOpened = false;
   }
   
 }

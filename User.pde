@@ -15,6 +15,8 @@ class User {
   // node + attractor parameters
   
   OriginNode[] nodes;
+  ArrayList<Integer> gatheredNodes = new ArrayList<Integer>();
+  boolean hasBurst = false;
   
   Attractor leftAttractor;
   Attractor rightAttractor;
@@ -77,9 +79,9 @@ class User {
   }
   
   void initNodeGrid() {
-    // use a variable height and width to position the nodes randomly within the size of the screen.
-    int seedWidth  = Math.round(random(gridSize.x, width));
-    int seedHeight = Math.round(random(gridSize.y, height));
+    // use the chest position as the basis for the position of the user's nodes.
+    int seedWidth  = Math.round(this.chestPosn.x + (gridSize.x / 2));
+    int seedHeight = Math.round(this.chestPosn.y + (gridSize.y / 2));
     
     // diamond generator (same as in the constructor).
     int i = 0; 
@@ -129,6 +131,54 @@ class User {
     
     // update attractor positions.
     
+    this.updateAttractors(lHand, rHand);
+    
+    // reset gathered nodes + burst
+    
+    // clear out all nodes past the 30th element.
+    int gatheredLength = this.gatheredNodes.size();
+    if (gatheredLength > 30) {
+      this.gatheredNodes = new ArrayList<Integer>(this.gatheredNodes.subList(0, 30));
+      gatheredLength = 30;
+    }
+    
+    // get the last element.
+    int previouslyGathered = 0;
+    if (gatheredLength > 0) {
+      previouslyGathered = this.gatheredNodes.get(gatheredLength - 1);
+    }
+    int currentlyGatheredNodes = 0;
+    
+    // update the user's node positions.
+    
+    for (int j = 0; j < this.nodes.length; j++) {
+      OriginNode currentNode = this.nodes[j];
+      
+      leftAttractor.attract(currentNode);
+      rightAttractor.attract(currentNode);
+      chestAttractor.attract(currentNode);
+      
+      if (leftAttractor.dist(currentNode) < leftAttractor.radius) {
+        currentlyGatheredNodes += 1;
+      } else if (rightAttractor.dist(currentNode) < rightAttractor.radius) {
+        currentlyGatheredNodes += 1;
+      } else if (chestAttractor.dist(currentNode) < chestAttractor.radius) {
+        currentlyGatheredNodes += 1;
+      }
+  
+      this.nodes[j].update();
+    }
+    
+    // add the current amount to the beginning of the list
+    this.gatheredNodes.add(0, currentlyGatheredNodes);
+    this.hasBurst = previouslyGathered - currentlyGatheredNodes > 300;
+    
+  }
+  
+  void updateAttractors(KJoint lHand, KJoint rHand) {
+    
+    // update positions
+    
     leftAttractor.x = this.lHandPosn.x;
     leftAttractor.y = this.lHandPosn.y;
     
@@ -138,10 +188,9 @@ class User {
     chestAttractor.x = this.chestPosn.x;
     chestAttractor.y = this.chestPosn.y;
     
-    // update user node positions.
+    // update state and strength
     
-    for (int j = 0; j < this.nodes.length; j++) {
-      if (lHand.getState() == KinectPV2.HandState_Closed) {
+    if (lHand.getState() == KinectPV2.HandState_Closed) {
         // spiral repulsor
         leftAttractor.strength = attractorStrength;
         leftAttractor.setMode(2);
@@ -158,14 +207,6 @@ class User {
         // attractor
         rightAttractor.strength = attractorStrength; 
       }
-      
-      leftAttractor.attract(this.nodes[j]);
-      rightAttractor.attract(this.nodes[j]);
-      chestAttractor.attract(this.nodes[j]);
-  
-      this.nodes[j].update();
-    }
-    
   }
   
   // -------------
@@ -183,6 +224,15 @@ class User {
     
     fill(255,0,0);
     text(Math.round(this.getAverageNodeVelocity() * 1000), 50, 70);
+    
+    if (this.gatheredNodes.size() > 0) {
+      text(Math.round(this.gatheredNodes.get(0)), 50, 90);
+    }
+    if (this.gatheredNodes.size() >= 30) {
+      text(Math.round(this.gatheredNodes.get(29)), 50, 105);
+    }
+    text(str(this.hasBurst), 50, 120);
+    text(str(this.getGatheredNodesProportion()), 50, 140);
   }
   
   // ----------------
@@ -202,4 +252,20 @@ class User {
     result = result / nodes.length;
     return result;
   }
+  
+  /*
+   * @description returns the proportion of currently gathered nodes.
+   * @note returns anywhere from 0 to 100.
+   */
+  public int getGatheredNodesProportion() {
+    int amountNodes = this.nodes.length;
+    int amountGathered = 0;
+    
+    if (this.gatheredNodes.size() > 0) {
+      amountGathered = this.gatheredNodes.get(0);
+    }
+    
+    return Math.round(((float) amountGathered / amountNodes) * 100);
+  }
+  
 }

@@ -89,6 +89,11 @@ void draw() {
   noStroke();
   rect(0,0,width,height);
   
+  // send opening message if we have users.
+  if (skeletonArray.size() > 0) {
+    osc.openingMessage();
+  }
+  
   // reset the users and send a closing message to OSC if users change.
   if (skeletonArray.size() != users.size()) {
     // TODO: should we be closing all the users out whenever one comes or leaves?

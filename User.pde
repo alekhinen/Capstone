@@ -214,7 +214,7 @@ class User {
     
     leftJerked  = leftDelta  > 100;
     rightJerked = rightDelta > 100;
-    chestJerked = chestDelta > 100;
+    chestJerked = chestDelta > 100; // currently not used
     
     // update positions
     
@@ -230,6 +230,7 @@ class User {
     // update state and strength
     
     if (leftJerked) {
+      // shoot the particles out if left hand jerked.
       leftAttractor.strength = -5000;
       leftAttractor.setMode(1);
     } else {
@@ -245,6 +246,7 @@ class User {
     }
     
     if (rightJerked) {
+      // shoot the particles out if right hand jerked.
       rightAttractor.strength = -5000;
       rightAttractor.setMode(1);
     } else {

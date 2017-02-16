@@ -212,9 +212,9 @@ class User {
     rightMoved = rightDelta > 10;
     chestMoved = chestDelta > 10;
     
-    leftJerked  = leftDelta  > 90;
-    rightJerked = rightDelta > 90;
-    chestJerked = chestDelta > 90;
+    leftJerked  = leftDelta  > 100;
+    rightJerked = rightDelta > 100;
+    chestJerked = chestDelta > 100;
     
     // update positions
     

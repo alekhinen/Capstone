@@ -22,6 +22,10 @@ class User {
   Attractor rightAttractor;
   Attractor chestAttractor;
   
+  boolean leftMoved  = false;
+  boolean rightMoved = false;
+  boolean chestMoved = false;
+  
   int xCount;
   int yCount;
   
@@ -38,11 +42,12 @@ class User {
        PVector rHandPosn) {
     this.cChest = color(Math.round(random(100, 255)), 
                         Math.round(random(100, 255)), 
-                        Math.round(random(100, 255)), 100);
+                        Math.round(random(100, 255)), 
+                        128);
     this.cChestName = getClosestNameFromColor(this.cChest);
-    this.chestPosn = chestPosn;
-    this.lHandPosn = lHandPosn;
-    this.rHandPosn = rHandPosn;
+    this.chestPosn  = chestPosn;
+    this.lHandPosn  = lHandPosn;
+    this.rHandPosn  = rHandPosn;
     
     // grid size is a vector where x -> width, y -> height
     this.gridSize = new PVector(Math.round(random(1400, displayWidth)), 
@@ -158,12 +163,28 @@ class User {
       rightAttractor.attract(currentNode);
       chestAttractor.attract(currentNode);
       
-      if (leftAttractor.dist(currentNode) < leftAttractor.radius) {
+      // todo: the toOpacity should be refactored somehow...
+      
+      if (leftAttractor.dist(currentNode) < leftAttractor.radius / 2) {
         currentlyGatheredNodes += 1;
-      } else if (rightAttractor.dist(currentNode) < rightAttractor.radius) {
+        if (leftMoved) {
+          currentNode.resetOpacity();
+        }
+        currentNode.toOpacity = 255;
+      } else if (rightAttractor.dist(currentNode) < rightAttractor.radius / 2) {
         currentlyGatheredNodes += 1;
-      } else if (chestAttractor.dist(currentNode) < chestAttractor.radius) {
+        if (rightMoved) {
+          currentNode.resetOpacity();
+        }
+        currentNode.toOpacity = 255;
+      } else if (chestAttractor.dist(currentNode) < chestAttractor.radius / 2) {
         currentlyGatheredNodes += 1;
+        if (chestMoved) {
+          currentNode.resetOpacity();
+        }
+        currentNode.toOpacity = 255;
+      } else {
+        currentNode.resetOpacity();
       }
   
       this.nodes[j].update();
@@ -176,6 +197,12 @@ class User {
   }
   
   void updateAttractors(KJoint lHand, KJoint rHand) {
+    
+    // determine if attractors moved
+    
+    leftMoved  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y)) > 5;
+    rightMoved = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y)) > 5;
+    chestMoved = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y)) > 5;
     
     // update positions
     
@@ -209,19 +236,25 @@ class User {
       }
   }
   
-  // -------------
-  // ??? Functions
-  // -------------
+  // --------------
+  // Draw Functions
+  // --------------
   
   void draw() {
     
     // draw each node
-    
-    for (int j = 0; j < this.nodes.length; j++) {
-      fill(this.cChest);
-      rect(this.nodes[j].x, this.nodes[j].y, nodeSize, nodeSize);
+    for (OriginNode currentNode : this.nodes) {
+      fill(red(this.cChest), green(this.cChest), blue(this.cChest), currentNode.opacity);
+      rect(currentNode.x, currentNode.y, nodeSize, nodeSize);
     }
     
+    drawDebug();
+  }
+  
+  /*
+   * @description draws text related to debugging the program. 
+   */
+  void drawDebug() {
     fill(255,0,0);
     text(Math.round(this.getAverageNodeVelocity() * 1000), 50, 70);
     

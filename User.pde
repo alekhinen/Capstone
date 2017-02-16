@@ -82,9 +82,9 @@ class User {
     initNodeGrid();
     
     // setup attractors
-    leftAttractor  = new Attractor(0, 0);
-    rightAttractor = new Attractor(0, 0);
-    chestAttractor = new Attractor(0, 0);
+    leftAttractor  = new Attractor(lHandPosn.x, lHandPosn.y);
+    rightAttractor = new Attractor(rHandPosn.x, rHandPosn.y);
+    chestAttractor = new Attractor(chestPosn.x, chestPosn.y);
   }
   
   void initNodeGrid() {
@@ -204,13 +204,17 @@ class User {
     
     // determine if attractors moved
     
-    leftMoved  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y)) > 5;
-    rightMoved = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y)) > 5;
-    chestMoved = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y)) > 5;
+    double leftDelta  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y));
+    double rightDelta = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y));
+    double chestDelta = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y));
     
-    leftJerked  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y)) > 90;
-    rightJerked = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y)) > 90;
-    chestJerked = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y)) > 50;
+    leftMoved  = leftDelta  > 10;
+    rightMoved = rightDelta > 10;
+    chestMoved = chestDelta > 10;
+    
+    leftJerked  = leftDelta  > 90;
+    rightJerked = rightDelta > 90;
+    chestJerked = chestDelta > 90;
     
     // update positions
     

@@ -26,6 +26,10 @@ class User {
   boolean rightMoved = false;
   boolean chestMoved = false;
   
+  boolean leftJerked  = false;
+  boolean rightJerked = false;
+  boolean chestJerked = false;
+  
   int xCount;
   int yCount;
   
@@ -78,9 +82,9 @@ class User {
     initNodeGrid();
     
     // setup attractors
-    leftAttractor  = new Attractor(0, 0);
-    rightAttractor = new Attractor(0, 0);
-    chestAttractor = new Attractor(0, 0);
+    leftAttractor  = new Attractor(lHandPosn.x, lHandPosn.y);
+    rightAttractor = new Attractor(rHandPosn.x, rHandPosn.y);
+    chestAttractor = new Attractor(chestPosn.x, chestPosn.y);
   }
   
   void initNodeGrid() {
@@ -200,9 +204,17 @@ class User {
     
     // determine if attractors moved
     
-    leftMoved  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y)) > 5;
-    rightMoved = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y)) > 5;
-    chestMoved = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y)) > 5;
+    double leftDelta  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y));
+    double rightDelta = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y));
+    double chestDelta = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y));
+    
+    leftMoved  = leftDelta  > 10;
+    rightMoved = rightDelta > 10;
+    chestMoved = chestDelta > 10;
+    
+    leftJerked  = leftDelta  > 100;
+    rightJerked = rightDelta > 100;
+    chestJerked = chestDelta > 100; // currently not used
     
     // update positions
     
@@ -217,7 +229,12 @@ class User {
     
     // update state and strength
     
-    if (lHand.getState() == KinectPV2.HandState_Closed) {
+    if (leftJerked) {
+      // shoot the particles out if left hand jerked.
+      leftAttractor.strength = -5000;
+      leftAttractor.setMode(1);
+    } else {
+      if (lHand.getState() == KinectPV2.HandState_Closed) {
         // spiral repulsor
         leftAttractor.strength = attractorStrength;
         leftAttractor.setMode(2);
@@ -226,7 +243,14 @@ class User {
         leftAttractor.strength = attractorStrength; 
         leftAttractor.setMode(1);
       }
-      
+    }
+    
+    if (rightJerked) {
+      // shoot the particles out if right hand jerked.
+      rightAttractor.strength = -5000;
+      rightAttractor.setMode(1);
+    } else {
+      rightAttractor.setMode(1);
       if (rHand.getState() == KinectPV2.HandState_Closed) {
         // super-strong attractor
         rightAttractor.strength = attractorStrength * 4; 
@@ -234,6 +258,9 @@ class User {
         // attractor
         rightAttractor.strength = attractorStrength; 
       }
+    }
+      
+      
   }
   
   // --------------

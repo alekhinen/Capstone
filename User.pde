@@ -26,6 +26,10 @@ class User {
   boolean rightMoved = false;
   boolean chestMoved = false;
   
+  boolean leftJerked  = false;
+  boolean rightJerked = false;
+  boolean chestJerked = false;
+  
   int xCount;
   int yCount;
   
@@ -204,6 +208,10 @@ class User {
     rightMoved = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y)) > 5;
     chestMoved = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y)) > 5;
     
+    leftJerked  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y)) > 90;
+    rightJerked = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y)) > 90;
+    chestJerked = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y)) > 50;
+    
     // update positions
     
     leftAttractor.x = this.lHandPosn.x;
@@ -217,7 +225,11 @@ class User {
     
     // update state and strength
     
-    if (lHand.getState() == KinectPV2.HandState_Closed) {
+    if (leftJerked) {
+      leftAttractor.strength = -5000;
+      leftAttractor.setMode(1);
+    } else {
+      if (lHand.getState() == KinectPV2.HandState_Closed) {
         // spiral repulsor
         leftAttractor.strength = attractorStrength;
         leftAttractor.setMode(2);
@@ -226,7 +238,13 @@ class User {
         leftAttractor.strength = attractorStrength; 
         leftAttractor.setMode(1);
       }
-      
+    }
+    
+    if (rightJerked) {
+      rightAttractor.strength = -5000;
+      rightAttractor.setMode(1);
+    } else {
+      rightAttractor.setMode(1);
       if (rHand.getState() == KinectPV2.HandState_Closed) {
         // super-strong attractor
         rightAttractor.strength = attractorStrength * 4; 
@@ -234,6 +252,9 @@ class User {
         // attractor
         rightAttractor.strength = attractorStrength; 
       }
+    }
+      
+      
   }
   
   // --------------

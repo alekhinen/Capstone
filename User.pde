@@ -22,6 +22,10 @@ class User {
   Attractor rightAttractor;
   Attractor chestAttractor;
   
+  boolean leftMoved  = false;
+  boolean rightMoved = false;
+  boolean chestMoved = false;
+  
   int xCount;
   int yCount;
   
@@ -41,9 +45,9 @@ class User {
                         Math.round(random(100, 255)), 
                         128);
     this.cChestName = getClosestNameFromColor(this.cChest);
-    this.chestPosn = chestPosn;
-    this.lHandPosn = lHandPosn;
-    this.rHandPosn = rHandPosn;
+    this.chestPosn  = chestPosn;
+    this.lHandPosn  = lHandPosn;
+    this.rHandPosn  = rHandPosn;
     
     // grid size is a vector where x -> width, y -> height
     this.gridSize = new PVector(Math.round(random(1400, displayWidth)), 
@@ -161,18 +165,24 @@ class User {
       
       // todo: the toOpacity should be refactored somehow...
       
-      if (leftAttractor.dist(currentNode) < leftAttractor.radius) {
+      if (leftAttractor.dist(currentNode) < leftAttractor.radius / 2) {
         currentlyGatheredNodes += 1;
+        if (leftMoved) {
+          currentNode.resetOpacity();
+        }
         currentNode.toOpacity = 255;
-        currentNode.inField = true;
-      } else if (rightAttractor.dist(currentNode) < rightAttractor.radius) {
+      } else if (rightAttractor.dist(currentNode) < rightAttractor.radius / 2) {
         currentlyGatheredNodes += 1;
+        if (rightMoved) {
+          currentNode.resetOpacity();
+        }
         currentNode.toOpacity = 255;
-        currentNode.inField = true;
-      } else if (chestAttractor.dist(currentNode) < chestAttractor.radius) {
+      } else if (chestAttractor.dist(currentNode) < chestAttractor.radius / 2) {
         currentlyGatheredNodes += 1;
+        if (chestMoved) {
+          currentNode.resetOpacity();
+        }
         currentNode.toOpacity = 255;
-        currentNode.inField = true;
       } else {
         currentNode.resetOpacity();
       }
@@ -187,6 +197,12 @@ class User {
   }
   
   void updateAttractors(KJoint lHand, KJoint rHand) {
+    
+    // determine if attractors moved
+    
+    leftMoved  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y)) > 5;
+    rightMoved = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y)) > 5;
+    chestMoved = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y)) > 5;
     
     // update positions
     

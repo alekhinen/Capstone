@@ -10,7 +10,6 @@ public class OriginNode extends Node {
   final int baseOpacity = 128;
   int toOpacity = 128;
   int opacity = 128;
-  boolean inField = false;
   boolean triggered = false;
   
   // ------ constructors ------
@@ -100,7 +99,6 @@ public class OriginNode extends Node {
   void resetOpacity() {
     this.toOpacity = this.baseOpacity;
     this.opacity   = this.baseOpacity;
-    this.inField   = false; // todo: field not needed.
     this.triggered = false;
   }
   

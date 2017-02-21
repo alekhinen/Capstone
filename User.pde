@@ -39,6 +39,7 @@ class User {
   
   // transitioners
   
+  // note: 60 frames is 2 seconds (since we're running at 30fps).
   final float transitionFrame = 60.0;
   float currentFrame = 0.0;
   boolean isDying = false;
@@ -128,6 +129,9 @@ class User {
   // Mutators
   // --------
   
+  /*
+   * @description: the update function when the user is marked as dying.
+   */
   void deathUpdate() {
     
     // update transitioners
@@ -147,6 +151,9 @@ class User {
     
   }
   
+  /*
+   * @description: the main update function. (updates User state)
+   */
   void update(KJoint chest, KJoint lHand, KJoint rHand) {
     
     // update transitioners
@@ -304,7 +311,11 @@ class User {
     
     // draw each node
     for (OriginNode currentNode : this.nodes) {
-      fill(red(this.cChest), green(this.cChest), blue(this.cChest), currentNode.opacity * (this.currentFrame / this.transitionFrame));
+      // opacity is based off the proportion of currentFrame to transitionFrame.
+      fill(red(this.cChest), 
+           green(this.cChest), 
+           blue(this.cChest),
+           currentNode.opacity * (this.currentFrame / this.transitionFrame));
       rect(currentNode.x, currentNode.y, nodeSize, nodeSize);
     }
     

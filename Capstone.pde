@@ -40,6 +40,7 @@ SonicColor [] sonicColors = {
 
 // dynamic list of users.
 ArrayList<User> users;
+// users that walked off the screen, transitioning to their passing.
 ArrayList<User> dyingUsers;
 
 // ================
@@ -51,20 +52,25 @@ ArrayList<User> dyingUsers;
 // -----
 
 void setup() {
+  
   size(displayWidth, displayHeight, P3D);
-  
   frameRate(FRAME_RATE);
-
-  // initialize kinect stuff. 
-  initKinect();
-  // initialize users.
-  users = new ArrayList<User>();
-  dyingUsers = new ArrayList<User>();
-  // initialize OSC.
-  osc = new OSC();
-  
   stroke(0, 50);
   background(0);
+
+  // initialize kinect stuff. 
+  
+  initKinect();
+  
+  // initialize users.
+  
+  users = new ArrayList<User>();
+  dyingUsers = new ArrayList<User>();
+  
+  // initialize OSC.
+  
+  osc = new OSC();
+  
 }
 
 void initKinect() {
@@ -81,32 +87,18 @@ void initKinect() {
 // ----
 
 void draw() {
-  // raw depth contains values [0 - 4500]in a one dimensional 512x424 array.
+  
+  resetScreen();
+  clearTheDead();
+  
+  // get kinect data.
+  // note: raw depth contains values [0 - 4500] in a one dimensional 512x424 array.
   rawDepth = kinect.getRawDepthData();
-  // skeletons (aka users)
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonDepthMap();
-
-  // reset the screen.
-  fill(0);
-  noStroke();
-  rect(0,0,width,height);
   
   // send opening message if we have users.
   if (skeletonArray.size() > 0) {
     osc.openingMessage();
-  }
-  
-  // clear out the dead.
-  int dyingIncrement = 0;
-  while (dyingIncrement < dyingUsers.size()) {
-    User u = dyingUsers.get(dyingIncrement);
-    if (u.currentFrame == 0.0) {
-      dyingUsers.remove(dyingIncrement);
-    } else {
-      u.deathUpdate();
-      u.draw();
-      dyingIncrement += 1;
-    }
   }
   
   // reset the users and send a closing message to OSC if users change.
@@ -115,6 +107,7 @@ void draw() {
     osc.closingMessage(users);
     for (User u : users) {
       u.fadeOut();
+      u.draw();
       dyingUsers.add(u);
     }
     users = new ArrayList<User>();
@@ -156,6 +149,34 @@ void draw() {
 
   fill(255, 0, 0);
   text(frameRate, 50, 50);
+}
+
+// ---------------------
+// Draw Helper Functions
+// ---------------------
+
+void resetScreen() {
+  fill(0);
+  noStroke();
+  rect(0,0,width,height);
+}
+
+/*
+ * @description: for any user in dyingUsers that's currentFrame is 0,
+ *               remove them from the list.
+ */
+void clearTheDead() {
+  int dyingIncrement = 0;
+  while (dyingIncrement < dyingUsers.size()) {
+    User u = dyingUsers.get(dyingIncrement);
+    if (u.currentFrame == 0.0) {
+      dyingUsers.remove(dyingIncrement);
+    } else {
+      u.deathUpdate();
+      u.draw();
+      dyingIncrement += 1;
+    }
+  }
 }
 
 // ----------

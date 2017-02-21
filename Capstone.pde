@@ -40,6 +40,7 @@ SonicColor [] sonicColors = {
 
 // dynamic list of users.
 ArrayList<User> users;
+ArrayList<User> dyingUsers;
 
 // ================
 // Global Functions
@@ -58,6 +59,7 @@ void setup() {
   initKinect();
   // initialize users.
   users = new ArrayList<User>();
+  dyingUsers = new ArrayList<User>();
   // initialize OSC.
   osc = new OSC();
   
@@ -94,10 +96,27 @@ void draw() {
     osc.openingMessage();
   }
   
+  // clear out the dead.
+  int dyingIncrement = 0;
+  while (dyingIncrement < dyingUsers.size()) {
+    User u = dyingUsers.get(dyingIncrement);
+    if (u.currentFrame == 0.0) {
+      dyingUsers.remove(dyingIncrement);
+    } else {
+      u.deathUpdate();
+      u.draw();
+      dyingIncrement += 1;
+    }
+  }
+  
   // reset the users and send a closing message to OSC if users change.
   if (skeletonArray.size() != users.size()) {
     // TODO: should we be closing all the users out whenever one comes or leaves?
     osc.closingMessage(users);
+    for (User u : users) {
+      u.fadeOut();
+      dyingUsers.add(u);
+    }
     users = new ArrayList<User>();
   }
   

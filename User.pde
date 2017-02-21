@@ -37,6 +37,13 @@ class User {
   float attractorStrength = 3;
   int nodeSize = 5;
   
+  // transitioners
+  
+  // note: 60 frames is 2 seconds (since we're running at 30fps).
+  final float transitionFrame = 60.0;
+  float currentFrame = 0.0;
+  boolean isDying = false;
+  
   // -----------
   // Constructor
   // -----------
@@ -122,7 +129,40 @@ class User {
   // Mutators
   // --------
   
+  /*
+   * @description: the update function when the user is marked as dying.
+   */
+  void deathUpdate() {
+    
+    // update transitioners
+    
+    if (this.currentFrame > 0 && this.isDying) {
+      this.currentFrame -= 1;
+    }
+    
+    this.leftAttractor.strength = 0;
+    this.rightAttractor.strength = 0;
+    this.chestAttractor.strength = 0;
+    
+    for (int j = 0; j < this.nodes.length; j++) {
+      OriginNode currentNode = this.nodes[j];
+      currentNode.update();  
+    }
+    
+  }
+  
+  /*
+   * @description: the main update function. (updates User state)
+   */
   void update(KJoint chest, KJoint lHand, KJoint rHand) {
+    
+    // update transitioners
+    
+    if (this.currentFrame > 0 && this.isDying) {
+      this.currentFrame -= 1;
+    } else if (this.currentFrame < this.transitionFrame && !this.isDying) {
+      this.currentFrame += 1;
+    }
     
     // map and update user skeleton.
 
@@ -271,7 +311,11 @@ class User {
     
     // draw each node
     for (OriginNode currentNode : this.nodes) {
-      fill(red(this.cChest), green(this.cChest), blue(this.cChest), currentNode.opacity);
+      // opacity is based off the proportion of currentFrame to transitionFrame.
+      fill(red(this.cChest), 
+           green(this.cChest), 
+           blue(this.cChest),
+           currentNode.opacity * (this.currentFrame / this.transitionFrame));
       rect(currentNode.x, currentNode.y, nodeSize, nodeSize);
     }
     
@@ -326,6 +370,14 @@ class User {
     }
     
     return Math.round(((float) amountGathered / amountNodes) * 100);
+  }
+  
+  // -------
+  // Closing
+  // -------
+  
+  void fadeOut() {
+    isDying = true;
   }
   
 }

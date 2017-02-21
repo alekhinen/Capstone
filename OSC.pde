@@ -63,7 +63,8 @@ class OSC {
   }
   
   /** 
-   * @description sends an opening message exactly once.
+   * @description sends an opening message if it hasn't been opened.
+   * @note: sending a closingMessage resets the hasOpened boolean.
    */
   void openingMessage() {
     if (!hasOpened) {

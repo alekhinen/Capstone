@@ -55,7 +55,7 @@ class User {
     
     // grid size is a vector where x -> width, y -> height
     this.gridSize = new PVector(Math.round(random(1400, displayWidth)), 
-                                Math.round(random(300, displayHeight)));
+                                Math.round(random(300, Math.max(displayHeight - 200, 300))));
     this.gridSize.x = this.gridSize.y;
     
     xCount = Math.round(random(100, 201));
@@ -89,8 +89,8 @@ class User {
   
   void initNodeGrid() {
     // use the chest position as the basis for the position of the user's nodes.
-    int seedWidth  = Math.round(this.chestPosn.x + (gridSize.x / 2));
-    int seedHeight = Math.round(this.chestPosn.y + (gridSize.y / 2));
+    int seedWidth  = Math.round(this.chestPosn.x + gridSize.x + (gridSize.x / 2));
+    int seedHeight = Math.round(this.chestPosn.y + gridSize.y);
     
     // diamond generator (same as in the constructor).
     int i = 0; 
@@ -259,8 +259,6 @@ class User {
         rightAttractor.strength = attractorStrength; 
       }
     }
-      
-      
   }
   
   // --------------

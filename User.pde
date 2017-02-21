@@ -62,6 +62,7 @@ class User {
     yCount = Math.round(random(20, 31));
     
     // diamond generator (specifically to count the number of nodes needed).
+    // todo: this should be refactored
     int totalCount = 0;
     int nodeMidHeight = yCount / 2;
     for (int y = 0; y < yCount; y++) {
@@ -93,6 +94,7 @@ class User {
     int seedHeight = Math.round(this.chestPosn.y + gridSize.y);
     
     // diamond generator (same as in the constructor).
+    // todo: this should be refactored.
     int i = 0; 
     int nodeMidHeight = this.yCount / 2;
     for (int y = 0; y < this.yCount; y++) {

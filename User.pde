@@ -44,6 +44,12 @@ class User {
   float currentFrame = 0.0;
   boolean isDying = false;
   
+  // debug 
+  
+  double leftDelta = 0;
+  double rightDelta = 0;
+  double chestDelta = 0;
+  
   // -----------
   // Constructor
   // -----------
@@ -246,16 +252,23 @@ class User {
     
     // determine if attractors moved
     
-    double leftDelta  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y));
-    double rightDelta = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y));
-    double chestDelta = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y));
+    double currentLeftDelta  = this.leftDelta;
+    double currentRightDelta = this.rightDelta;
+    double currentChestDelta = this.chestDelta;
+    
+    this.leftDelta  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y));
+    this.rightDelta = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y));
+    this.chestDelta = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y));
     
     leftMoved  = leftDelta  > 10;
     rightMoved = rightDelta > 10;
     chestMoved = chestDelta > 10;
     
-    leftJerked  = leftDelta  > 100;
-    rightJerked = rightDelta > 100;
+    // note: there's been a lot of intermittent spikes in value. so to make sure
+    //       that we aren't registering a spike we are keeping a top level value to
+    //       do a sort of high pass filter on the signal.
+    leftJerked  = leftDelta > 100 && Math.abs(currentLeftDelta - this.leftDelta) < 50;
+    rightJerked = rightDelta > 100 && Math.abs(currentRightDelta - this.rightDelta) < 50;
     chestJerked = chestDelta > 100; // currently not used
     
     // update positions
@@ -337,6 +350,14 @@ class User {
     }
     text(str(this.hasBurst), 50, 120);
     text(str(this.getGatheredNodesProportion()), 50, 140);
+    
+    textSize(35);
+    
+    text(Math.round(this.leftDelta), 50, 160);
+    text(Math.round(this.rightDelta), 50, 200);
+    text(Math.round(this.chestDelta), 50, 235);
+    
+    textSize(12);
   }
   
   // ----------------

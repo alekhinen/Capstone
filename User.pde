@@ -409,7 +409,11 @@ class User {
     }  else if (this.peaceColor > 0) {
       this.peaceColor -= 1;
     }
-    return baseColor + Math.round(this.peaceColor);
+    int finalColor = baseColor + Math.round(this.peaceColor);
+    if (finalColor == 255 && this.nodeSize < 30) {
+      this.nodeSize += 1;
+    }
+    return finalColor;
   }
   
   // -------

@@ -156,7 +156,13 @@ void draw() {
 // ---------------------
 
 void resetScreen() {
-  fill(0);
+  float colorValue = 0;
+  for (User u : users) {
+      colorValue += u.getColorFromNodeCollection();
+  }
+  colorValue /= users.size();
+  
+  fill(colorValue);
   noStroke();
   rect(0,0,width,height);
 }

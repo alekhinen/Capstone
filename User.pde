@@ -12,10 +12,8 @@ class User {
   PVector lHandPosn;
   PVector rHandPosn;
   
-  // node + attractor parameters
+  // attractor parameters
   
-  OriginNode[] nodes;
-  ArrayList<Integer> gatheredNodes = new ArrayList<Integer>();
   boolean hasBurst = false;
   
   Attractor leftAttractor;
@@ -30,6 +28,17 @@ class User {
   boolean rightJerked = false;
   boolean chestJerked = false;
   
+  // debug (potentially not...)
+  // TODO: need to figure out a better way to do a high pass filter
+  double leftDelta = 0;
+  double rightDelta = 0;
+  double chestDelta = 0;
+  
+  // node parameters
+  
+  OriginNode[] nodes;
+  ArrayList<Integer> gatheredNodes = new ArrayList<Integer>();
+  
   int xCount;
   int yCount;
   
@@ -37,18 +46,16 @@ class User {
   float attractorStrength = 3;
   int nodeSize = 5;
   
-  // transitioners
+  // death transitioners
   
   // note: 60 frames is 2 seconds (since we're running at 30fps).
   final float transitionFrame = 60.0;
   float currentFrame = 0.0;
   boolean isDying = false;
   
-  // debug 
+  // peace transitioners
   
-  double leftDelta = 0;
-  double rightDelta = 0;
-  double chestDelta = 0;
+  float peaceColor = 0;
   
   // -----------
   // Constructor
@@ -391,6 +398,18 @@ class User {
     }
     
     return Math.round(((float) amountGathered / amountNodes) * 100);
+  }
+  
+  public int getColorFromNodeCollection() {
+    int gatheredProportion = this.getGatheredNodesProportion();
+    int baseColor = Math.round(map(gatheredProportion, 0, 100, 0, 33));
+    
+    if (gatheredProportion == 100 && this.peaceColor < (255 - 33)) {
+      this.peaceColor += 0.25;
+    }  else if (this.peaceColor > 0) {
+      this.peaceColor -= 1;
+    }
+    return baseColor + Math.round(this.peaceColor);
   }
   
   // -------

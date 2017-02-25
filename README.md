@@ -10,11 +10,19 @@ Here's a sequence of images of a user testing our prototype installation (24 Feb
 This readme will be periodically updated with high-level information. See the issues page and wiki for further details.
 
 ## Tech Stack
-- Windows 10
-- Kinect V2 SDK
-- Processing 3
-- Max/MSP
-- Ableton
+- Hardware
+  - Dell Desktop (Unknown Model)
+  - 2012 Macbook Pro
+  - Short Throw Projector
+  - Wireless Router
+  - Kinect for Xbox One
+  - Speakers (whatever is available in the room)
+- Software
+  - Windows 10
+  - Kinect V2 SDK
+  - Processing 3
+  - Max/MSP
+  - Ableton
 
 ## Team
 - Nick Alekhine

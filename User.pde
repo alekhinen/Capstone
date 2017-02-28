@@ -131,12 +131,12 @@ class User {
         float xPos = x*((gridSize.x * ratio)/(xCountRow-1))+(seedWidth-(gridSize.x * ratio))/2;
         float yPos = y*(gridSize.y/(this.yCount-1))+(seedHeight-gridSize.y)/2;
         if (x > 0) {
-          this.nodes[i] = new OriginNode(xPos, yPos, this.nodes[i-1]);
+          this.nodes[i] = new OriginNode(xPos, yPos, this.nodes[i - 1]);
         } else {
           this.nodes[i] = new OriginNode(xPos, yPos);
         }
         this.nodes[i].setBoundary(0, 0, width, height);
-        this.nodes[i].setDamping(0.01);  //// 0.0 - 1.0
+        this.nodes[i].setDamping(0.003);  //// 0.0 - 1.0
         i++;
       }
     }
@@ -223,6 +223,7 @@ class User {
     
     for (int j = 0; j < this.nodes.length; j++) {
       OriginNode currentNode = this.nodes[j];
+      currentNode.trackAttractor = false;
       
       leftAttractor.attract(currentNode);
       rightAttractor.attract(currentNode);
@@ -231,18 +232,24 @@ class User {
       // todo: the toOpacity should be refactored somehow...
       
       if (leftAttractor.dist(currentNode) < leftAttractor.radius / 2) {
+        currentNode.trackAttractor = true;
+        currentNode.trackedAttractor = leftAttractor;
         currentlyGatheredNodes += 1;
         if (leftMoved) {
           currentNode.resetOpacity();
         }
         currentNode.toOpacity = 255;
       } else if (rightAttractor.dist(currentNode) < rightAttractor.radius / 2) {
+        currentNode.trackAttractor = true;
+        currentNode.trackedAttractor = rightAttractor;
         currentlyGatheredNodes += 1;
         if (rightMoved) {
           currentNode.resetOpacity();
         }
         currentNode.toOpacity = 255;
       } else if (chestAttractor.dist(currentNode) < chestAttractor.radius / 2) {
+        currentNode.trackAttractor = true;
+        currentNode.trackedAttractor = chestAttractor;
         currentlyGatheredNodes += 1;
         if (chestMoved) {
           currentNode.resetOpacity();
@@ -303,7 +310,7 @@ class User {
       leftAttractor.setMode(1);
     } else {
       if (lHand.getState() == KinectPV2.HandState_Closed) {
-        // spiral repulsor
+        // spiral repulsor is mode 2
         leftAttractor.strength = attractorStrength;
         leftAttractor.setMode(2);
       } else {
@@ -315,6 +322,8 @@ class User {
     
     if (rightJerked) {
       // shoot the particles out if right hand jerked.
+      // TODO: maybe instead of shooting the particles out, we tell the particles
+      //       that are linked to stay linked (otherwise de-link.
       rightAttractor.strength = -5000;
       rightAttractor.setMode(1);
     } else {
@@ -337,10 +346,11 @@ class User {
     
     // draw each node
     for (OriginNode currentNode : this.nodes) {
+      float colorMapping = map(currentNode.opacity, 128, 255, 0, 20);
       // opacity is based off the proportion of currentFrame to transitionFrame.
-      fill(red(this.cChest), 
-           green(this.cChest), 
-           blue(this.cChest),
+      fill(red(this.cChest) + colorMapping, 
+           green(this.cChest) + colorMapping, 
+           blue(this.cChest) + colorMapping,
            currentNode.opacity * (this.currentFrame / this.transitionFrame));
       rect(currentNode.x, currentNode.y, nodeSize, nodeSize);
     }

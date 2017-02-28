@@ -10,6 +10,9 @@ public class OriginNode extends Node {
   boolean hasPriorNode = false;
   OriginNode priorNode;
   
+  boolean trackAttractor = false;
+  Attractor trackedAttractor;
+  
   final int baseOpacity = 128;
   int toOpacity = 128;
   int opacity = 128;
@@ -87,8 +90,17 @@ public class OriginNode extends Node {
         returnVelocity.y = deltaY * damping;
       }
       
-      if (this.hasPriorNode) {
-        float deltaX = this.x - this.priorNode.x;
+      if (this.trackAttractor) {
+        // TODO: this came out like shit.
+        //float deltaX = this.trackedAttractor.x - this.x;
+        //float deltaY = this.trackedAttractor.y - this.y;
+        
+        //this.velocity.x += Math.sqrt(deltaX);
+        //this.velocity.y += Math.sqrt(deltaY);
+      }
+      
+      if (this.hasPriorNode && this.trackAttractor) {
+        float deltaX = this.x - this.priorNode.x; // TODO: can also use velocity.
         float deltaY = this.y - this.priorNode.y;
         
         this.priorNode.x += deltaX / 2;

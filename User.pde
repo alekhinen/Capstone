@@ -180,6 +180,8 @@ class User {
     // map and update user skeleton.
 
     int z = getDepthFromJoint(chest);
+    // have depth map to the size of the nodes.
+    this.nodeSize = Math.round(map(z, 0, 4500, 2, 20));
     
     PVector mappedChest = mapDepthToScreen(chest);
     PVector mappedLeft  = mapDepthToScreen(lHand);
@@ -339,7 +341,7 @@ class User {
       rect(currentNode.x, currentNode.y, nodeSize, nodeSize);
     }
     
-    drawDebug();
+    //drawDebug();
   }
   
   /*

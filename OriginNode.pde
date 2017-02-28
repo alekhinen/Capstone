@@ -7,6 +7,9 @@ public class OriginNode extends Node {
   boolean isReturning;
   PVector returnVelocity = new PVector();
   
+  boolean hasPriorNode = false;
+  OriginNode priorNode;
+  
   final int baseOpacity = 128;
   int toOpacity = 128;
   int opacity = 128;
@@ -23,6 +26,17 @@ public class OriginNode extends Node {
     
     originX = theX;
     originY = theY;
+  }
+  
+  public OriginNode(float theX, float theY, OriginNode priorNode) {
+    x = theX;
+    y = theY;
+    
+    originX = theX;
+    originY = theY;
+    
+    this.priorNode = priorNode;
+    this.hasPriorNode = true;
   }
 
   public OriginNode(float theX, float theY, float theZ) {
@@ -71,6 +85,14 @@ public class OriginNode extends Node {
         
         returnVelocity.x = deltaX * damping;
         returnVelocity.y = deltaY * damping;
+      }
+      
+      if (this.hasPriorNode) {
+        float deltaX = this.x - this.priorNode.x;
+        float deltaY = this.y - this.priorNode.y;
+        
+        this.priorNode.x += deltaX / 2;
+        this.priorNode.y += deltaY / 2;
       }
     }
   }

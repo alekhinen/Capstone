@@ -130,7 +130,11 @@ class User {
       for (int x = 0; x < xCountRow; x++) {
         float xPos = x*((gridSize.x * ratio)/(xCountRow-1))+(seedWidth-(gridSize.x * ratio))/2;
         float yPos = y*(gridSize.y/(this.yCount-1))+(seedHeight-gridSize.y)/2;
-        this.nodes[i] = new OriginNode(xPos, yPos);
+        if (x > 0) {
+          this.nodes[i] = new OriginNode(xPos, yPos, this.nodes[i-1]);
+        } else {
+          this.nodes[i] = new OriginNode(xPos, yPos);
+        }
         this.nodes[i].setBoundary(0, 0, width, height);
         this.nodes[i].setDamping(0.01);  //// 0.0 - 1.0
         i++;

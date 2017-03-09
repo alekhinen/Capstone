@@ -333,8 +333,8 @@ class User {
   // --------------
   
   void draw() {
-    //drawHands();
-    drawLines();
+    drawHands();
+    //drawLines();
     drawParticles();
     //drawDebug();
   }
@@ -345,19 +345,23 @@ class User {
     }
     
     strokeWeight(4);
+    stroke(red(this.cChest), 
+               green(this.cChest), 
+               blue(this.cChest), 100);
     
-    int i = 0;
-    PVector previous = this.leftHandPositions.get(0); 
-    for (PVector hand : this.leftHandPositions) {
-      if (i > 0) {
-        stroke(red(this.cChest) * (30/i), 
-               green(this.cChest) * (30/i), 
-               blue(this.cChest) * (30/i), 255);
-        line(hand.x, hand.y, previous.x, previous.y);
-      }
-      previous = hand;
-      i += 1;
-    }
+    //int i = 0;
+    //PVector previous = this.leftHandPositions.get(0); 
+    //for (PVector hand : this.leftHandPositions) {
+    //  if (i > 0) {
+    //    stroke(red(this.cChest) * (30/i), 
+    //           green(this.cChest) * (30/i), 
+    //           blue(this.cChest) * (30/i), 255);
+    //    line(hand.x, hand.y, previous.x, previous.y);
+    //  }
+    //  previous = hand;
+    //  i += 1;
+    //}
+    drawLine(this.leftHandPositions.toArray(new PVector[this.leftHandPositions.size()]), true);
     
     noStroke();
   }

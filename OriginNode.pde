@@ -69,12 +69,11 @@ public class OriginNode extends Node {
       if (this.trackAttractor) {
         if (!this.stopTracking) {
           // Distance = Work / Force
-          // TODO: this node should follow the attractor if it is not going too fast (or until some state is reached?).
           float deltaX = this.trackedAttractor.x - this.x;
           float deltaY = this.trackedAttractor.y - this.y;
           
-          this.velocity.x = deltaX * 0.3;
-          this.velocity.y = deltaY * 0.3;
+          this.velocity.x = deltaX * 0.3; // note: adjustable param - damping (0.0 - 1.0)
+          this.velocity.y = deltaY * 0.3; // note: adjustable param - same thing
         }
         
         if (this.trackedAttractor.dist(this) < this.trackedAttractor.radius / 2) {

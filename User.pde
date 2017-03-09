@@ -12,6 +12,9 @@ class User {
   PVector lHandPosn;
   PVector rHandPosn;
   
+  ArrayList<PVector> leftHandPositions = new ArrayList<PVector>();
+  ArrayList<PVector> rightHandPositions = new ArrayList<PVector>();
+  
   // attractor parameters
   
   boolean hasBurst = false;
@@ -95,7 +98,6 @@ class User {
       totalCount += xCountRow;
     }
     
-    
     // note: xCount * yCount
     nodes = new OriginNode[totalCount];
     
@@ -125,14 +127,13 @@ class User {
       }
       float ratio = (newY * 1.0) / (nodeMidHeight * 1.0);
       int xCountRow = Math.round(ratio * this.xCount);
-      System.out.println("xCountRow: " + str(xCountRow));
 
       for (int x = 0; x < xCountRow; x++) {
         float xPos = x*((gridSize.x * ratio)/(xCountRow-1))+(seedWidth-(gridSize.x * ratio))/2;
         float yPos = y*(gridSize.y/(this.yCount-1))+(seedHeight-gridSize.y)/2;
         this.nodes[i] = new OriginNode(xPos, yPos);
         this.nodes[i].setBoundary(0, 0, width, height);
-        this.nodes[i].setDamping(0.019);  //// 0.0 - 1.0
+        this.nodes[i].setDamping(0.019);  //note: adjustable param 0.0 - 1.0
         i++;
       }
     }
@@ -193,7 +194,9 @@ class User {
     
     // note: could be interesting to increase strength as hands get closer. 
     float handDist = (float) euclideanDistance(this.lHandPosn, this.rHandPosn);
-    this.attractorStrength = 4 - map(handDist, 0, 1080, 0.1, 3.7);
+    this.attractorStrength = 4 - map(handDist, 0, 1080, 0.1, 3.7); // note: adjustable param (unlimited bounds)
+    
+    updatePreviousPositions();
     
     // update attractor positions.
     
@@ -262,6 +265,25 @@ class User {
     
   }
   
+  /*
+   * @description: updates the previous positions of the hands.
+   */
+  void updatePreviousPositions() {
+    // clear out all nodes past the max size.
+    int maxSize = 60;
+    if (this.leftHandPositions.size() > maxSize) {
+      this.leftHandPositions = new ArrayList<PVector>(this.leftHandPositions.subList(0, maxSize));
+    }    
+    
+    if (this.rightHandPositions.size() > maxSize) {
+      this.rightHandPositions = new ArrayList<PVector>(this.rightHandPositions.subList(0, maxSize));
+    }
+    
+    // add in the new positions.
+    this.leftHandPositions.add(0, this.lHandPosn);
+    this.rightHandPositions.add(0, this.rHandPosn);
+  }
+  
   void updateAttractors(KJoint lHand, KJoint rHand) {
     
     // determine if attractors moved
@@ -311,7 +333,65 @@ class User {
   // --------------
   
   void draw() {
+    //drawHands();
+    drawLines();
+    drawParticles();
+    //drawDebug();
+  }
+  
+  void drawHands() {
+    if (this.leftHandPositions.size() == 0 || this.rightHandPositions.size() == 0) {
+      return;
+    }
     
+    strokeWeight(4);
+    
+    int i = 0;
+    PVector previous = this.leftHandPositions.get(0); 
+    for (PVector hand : this.leftHandPositions) {
+      if (i > 0) {
+        stroke(red(this.cChest) * (30/i), 
+               green(this.cChest) * (30/i), 
+               blue(this.cChest) * (30/i), 255);
+        line(hand.x, hand.y, previous.x, previous.y);
+      }
+      previous = hand;
+      i += 1;
+    }
+    
+    noStroke();
+  }
+  
+  void drawLines() {
+    strokeWeight(1);
+    stroke(red(this.cChest), green(this.cChest), blue(this.cChest), 75);
+    
+    int index = 0;
+    int nodeMidHeight = yCount / 2;
+    for (int y = 0; y < yCount; y++) {
+      int newY = y;
+      if (y > nodeMidHeight) {
+        newY = this.yCount - y;
+      }
+      float ratio = (newY * 1.0) / (nodeMidHeight * 1.0);
+      int xCountRow = Math.round(ratio * this.xCount);
+
+      ArrayList<PVector> subset = new ArrayList<PVector>();
+      
+      for (int x = index; x < xCountRow + index; x++) {
+        subset.add(new PVector(this.nodes[x].x, this.nodes[x].y));
+      }
+      if (subset.size() > 1) {
+        drawLine(subset.toArray(new PVector[subset.size()]), true);
+      }
+      
+      index += xCountRow;
+    }
+    
+    noStroke();
+  }
+  
+  void drawParticles() {
     // draw each node
     for (OriginNode currentNode : this.nodes) {
       float colorMapping = map(currentNode.opacity, 128, 255, 0, 20);
@@ -320,10 +400,15 @@ class User {
            green(this.cChest) + colorMapping, 
            blue(this.cChest) + colorMapping,
            currentNode.opacity * (this.currentFrame / this.transitionFrame));
-      rect(currentNode.x, currentNode.y, nodeSize, nodeSize);
+      ellipse(currentNode.x, currentNode.y, nodeSize, nodeSize);
+      
+      // note: might be interesting to draw traces for each node.
+      //  stroke(red(this.cChest), green(this.cChest), blue(this.cChest), 27);
+      //  strokeWeight(1);
+      //  line(currentNode.originX, currentNode.originY,
+      //         currentNode.x, currentNode.y);
+      //  noStroke();  
     }
-    
-    //drawDebug();
   }
   
   /*

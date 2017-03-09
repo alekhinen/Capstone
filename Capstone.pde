@@ -90,7 +90,7 @@ void draw() {
   
   resetScreen();
   clearTheDead();
-  
+    
   // get kinect data.
   // note: raw depth contains values [0 - 4500] in a one dimensional 512x424 array.
   rawDepth = kinect.getRawDepthData();

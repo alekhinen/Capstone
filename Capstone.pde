@@ -53,7 +53,7 @@ ArrayList<User> dyingUsers;
 
 void setup() {
   
-  size(displayWidth, displayHeight, P3D);
+  fullScreen();
   frameRate(FRAME_RATE);
   stroke(0, 50);
   background(0);
@@ -90,7 +90,7 @@ void draw() {
   
   resetScreen();
   clearTheDead();
-  
+    
   // get kinect data.
   // note: raw depth contains values [0 - 4500] in a one dimensional 512x424 array.
   rawDepth = kinect.getRawDepthData();
@@ -156,7 +156,14 @@ void draw() {
 // ---------------------
 
 void resetScreen() {
-  fill(0);
+  // background color value.
+  float colorValue = 0;
+  for (User u : users) {
+      colorValue += u.getColorFromNodeCollection();
+  }
+  colorValue /= users.size();
+  
+  fill(colorValue, 55);
   noStroke();
   rect(0,0,width,height);
 }

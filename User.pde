@@ -12,10 +12,11 @@ class User {
   PVector lHandPosn;
   PVector rHandPosn;
   
-  // node + attractor parameters
+  ArrayList<PVector> leftHandPositions = new ArrayList<PVector>();
+  ArrayList<PVector> rightHandPositions = new ArrayList<PVector>();
   
-  OriginNode[] nodes;
-  ArrayList<Integer> gatheredNodes = new ArrayList<Integer>();
+  // attractor parameters
+  
   boolean hasBurst = false;
   
   Attractor leftAttractor;
@@ -30,6 +31,17 @@ class User {
   boolean rightJerked = false;
   boolean chestJerked = false;
   
+  // debug (potentially not...)
+  // TODO: need to figure out a better way to do a high pass filter
+  double leftDelta = 0;
+  double rightDelta = 0;
+  double chestDelta = 0;
+  
+  // node parameters
+  
+  OriginNode[] nodes;
+  ArrayList<Integer> gatheredNodes = new ArrayList<Integer>();
+  
   int xCount;
   int yCount;
   
@@ -37,12 +49,16 @@ class User {
   float attractorStrength = 3;
   int nodeSize = 5;
   
-  // transitioners
+  // death transitioners
   
   // note: 60 frames is 2 seconds (since we're running at 30fps).
   final float transitionFrame = 60.0;
   float currentFrame = 0.0;
   boolean isDying = false;
+  
+  // peace transitioners
+  
+  float peaceColor = 0;
   
   // -----------
   // Constructor
@@ -82,7 +98,6 @@ class User {
       totalCount += xCountRow;
     }
     
-    
     // note: xCount * yCount
     nodes = new OriginNode[totalCount];
     
@@ -112,14 +127,13 @@ class User {
       }
       float ratio = (newY * 1.0) / (nodeMidHeight * 1.0);
       int xCountRow = Math.round(ratio * this.xCount);
-      System.out.println("xCountRow: " + str(xCountRow));
 
       for (int x = 0; x < xCountRow; x++) {
         float xPos = x*((gridSize.x * ratio)/(xCountRow-1))+(seedWidth-(gridSize.x * ratio))/2;
         float yPos = y*(gridSize.y/(this.yCount-1))+(seedHeight-gridSize.y)/2;
         this.nodes[i] = new OriginNode(xPos, yPos);
         this.nodes[i].setBoundary(0, 0, width, height);
-        this.nodes[i].setDamping(0.01);  //// 0.0 - 1.0
+        this.nodes[i].setDamping(0.019);  //note: adjustable param 0.0 - 1.0
         i++;
       }
     }
@@ -167,6 +181,8 @@ class User {
     // map and update user skeleton.
 
     int z = getDepthFromJoint(chest);
+    // have depth map to the size of the nodes.
+    this.nodeSize = Math.round(map(z, 0, 4500, 2, 20));
     
     PVector mappedChest = mapDepthToScreen(chest);
     PVector mappedLeft  = mapDepthToScreen(lHand);
@@ -178,7 +194,9 @@ class User {
     
     // note: could be interesting to increase strength as hands get closer. 
     float handDist = (float) euclideanDistance(this.lHandPosn, this.rHandPosn);
-    this.attractorStrength = 2.5 - map(handDist, 0, 1080, 0.1, 2.4);
+    this.attractorStrength = 4 - map(handDist, 0, 1080, 0.1, 3.7); // note: adjustable param (unlimited bounds)
+    
+    updatePreviousPositions();
     
     // update attractor positions.
     
@@ -204,6 +222,7 @@ class User {
     
     for (int j = 0; j < this.nodes.length; j++) {
       OriginNode currentNode = this.nodes[j];
+      currentNode.trackAttractor = false;
       
       leftAttractor.attract(currentNode);
       rightAttractor.attract(currentNode);
@@ -212,12 +231,16 @@ class User {
       // todo: the toOpacity should be refactored somehow...
       
       if (leftAttractor.dist(currentNode) < leftAttractor.radius / 2) {
+        currentNode.trackAttractor = true;
+        currentNode.trackedAttractor = leftAttractor;
         currentlyGatheredNodes += 1;
         if (leftMoved) {
           currentNode.resetOpacity();
         }
         currentNode.toOpacity = 255;
       } else if (rightAttractor.dist(currentNode) < rightAttractor.radius / 2) {
+        currentNode.trackAttractor = true;
+        currentNode.trackedAttractor = rightAttractor;
         currentlyGatheredNodes += 1;
         if (rightMoved) {
           currentNode.resetOpacity();
@@ -242,21 +265,36 @@ class User {
     
   }
   
+  /*
+   * @description: updates the previous positions of the hands.
+   */
+  void updatePreviousPositions() {
+    // clear out all nodes past the max size.
+    int maxSize = 60;
+    if (this.leftHandPositions.size() > maxSize) {
+      this.leftHandPositions = new ArrayList<PVector>(this.leftHandPositions.subList(0, maxSize));
+    }    
+    
+    if (this.rightHandPositions.size() > maxSize) {
+      this.rightHandPositions = new ArrayList<PVector>(this.rightHandPositions.subList(0, maxSize));
+    }
+    
+    // add in the new positions.
+    this.leftHandPositions.add(0, this.lHandPosn);
+    this.rightHandPositions.add(0, this.rHandPosn);
+  }
+  
   void updateAttractors(KJoint lHand, KJoint rHand) {
     
     // determine if attractors moved
-    
-    double leftDelta  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y));
-    double rightDelta = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y));
-    double chestDelta = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y));
+        
+    this.leftDelta  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y));
+    this.rightDelta = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y));
+    this.chestDelta = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y));
     
     leftMoved  = leftDelta  > 10;
     rightMoved = rightDelta > 10;
     chestMoved = chestDelta > 10;
-    
-    leftJerked  = leftDelta  > 100;
-    rightJerked = rightDelta > 100;
-    chestJerked = chestDelta > 100; // currently not used
     
     // update positions
     
@@ -271,35 +309,22 @@ class User {
     
     // update state and strength
     
-    if (leftJerked) {
-      // shoot the particles out if left hand jerked.
-      leftAttractor.strength = -5000;
-      leftAttractor.setMode(1);
+    if (lHand.getState() == KinectPV2.HandState_Closed) {
+      // spiral repulsor is mode 2
+      leftAttractor.strength = attractorStrength;
+      leftAttractor.setMode(2);
     } else {
-      if (lHand.getState() == KinectPV2.HandState_Closed) {
-        // spiral repulsor
-        leftAttractor.strength = attractorStrength;
-        leftAttractor.setMode(2);
-      } else {
-        // attractor
-        leftAttractor.strength = attractorStrength; 
-        leftAttractor.setMode(1);
-      }
+      // attractor
+      leftAttractor.strength = attractorStrength; 
+      leftAttractor.setMode(1);
     }
     
-    if (rightJerked) {
-      // shoot the particles out if right hand jerked.
-      rightAttractor.strength = -5000;
-      rightAttractor.setMode(1);
+    if (rHand.getState() == KinectPV2.HandState_Closed) {
+      // super-strong attractor
+      rightAttractor.strength = attractorStrength * 4; 
     } else {
-      rightAttractor.setMode(1);
-      if (rHand.getState() == KinectPV2.HandState_Closed) {
-        // super-strong attractor
-        rightAttractor.strength = attractorStrength * 4; 
-      } else {
-        // attractor
-        rightAttractor.strength = attractorStrength; 
-      }
+      // attractor
+      rightAttractor.strength = attractorStrength; 
     }
   }
   
@@ -308,18 +333,86 @@ class User {
   // --------------
   
   void draw() {
-    
-    // draw each node
-    for (OriginNode currentNode : this.nodes) {
-      // opacity is based off the proportion of currentFrame to transitionFrame.
-      fill(red(this.cChest), 
-           green(this.cChest), 
-           blue(this.cChest),
-           currentNode.opacity * (this.currentFrame / this.transitionFrame));
-      rect(currentNode.x, currentNode.y, nodeSize, nodeSize);
+    drawHands();
+    //drawLines();
+    drawParticles();
+    //drawDebug();
+  }
+  
+  void drawHands() {
+    if (this.leftHandPositions.size() == 0 || this.rightHandPositions.size() == 0) {
+      return;
     }
     
-    drawDebug();
+    strokeWeight(4);
+    stroke(red(this.cChest), 
+               green(this.cChest), 
+               blue(this.cChest), 100);
+    
+    //int i = 0;
+    //PVector previous = this.leftHandPositions.get(0); 
+    //for (PVector hand : this.leftHandPositions) {
+    //  if (i > 0) {
+    //    stroke(red(this.cChest) * (30/i), 
+    //           green(this.cChest) * (30/i), 
+    //           blue(this.cChest) * (30/i), 255);
+    //    line(hand.x, hand.y, previous.x, previous.y);
+    //  }
+    //  previous = hand;
+    //  i += 1;
+    //}
+    drawLine(this.leftHandPositions.toArray(new PVector[this.leftHandPositions.size()]), true);
+    
+    noStroke();
+  }
+  
+  void drawLines() {
+    strokeWeight(1);
+    stroke(red(this.cChest), green(this.cChest), blue(this.cChest), 75);
+    
+    int index = 0;
+    int nodeMidHeight = yCount / 2;
+    for (int y = 0; y < yCount; y++) {
+      int newY = y;
+      if (y > nodeMidHeight) {
+        newY = this.yCount - y;
+      }
+      float ratio = (newY * 1.0) / (nodeMidHeight * 1.0);
+      int xCountRow = Math.round(ratio * this.xCount);
+
+      ArrayList<PVector> subset = new ArrayList<PVector>();
+      
+      for (int x = index; x < xCountRow + index; x++) {
+        subset.add(new PVector(this.nodes[x].x, this.nodes[x].y));
+      }
+      if (subset.size() > 1) {
+        drawLine(subset.toArray(new PVector[subset.size()]), true);
+      }
+      
+      index += xCountRow;
+    }
+    
+    noStroke();
+  }
+  
+  void drawParticles() {
+    // draw each node
+    for (OriginNode currentNode : this.nodes) {
+      float colorMapping = map(currentNode.opacity, 128, 255, 0, 20);
+      // opacity is based off the proportion of currentFrame to transitionFrame.
+      fill(red(this.cChest) + colorMapping, 
+           green(this.cChest) + colorMapping, 
+           blue(this.cChest) + colorMapping,
+           currentNode.opacity * (this.currentFrame / this.transitionFrame));
+      ellipse(currentNode.x, currentNode.y, nodeSize, nodeSize);
+      
+      // note: might be interesting to draw traces for each node.
+      //  stroke(red(this.cChest), green(this.cChest), blue(this.cChest), 27);
+      //  strokeWeight(1);
+      //  line(currentNode.originX, currentNode.originY,
+      //         currentNode.x, currentNode.y);
+      //  noStroke();  
+    }
   }
   
   /*
@@ -370,6 +463,22 @@ class User {
     }
     
     return Math.round(((float) amountGathered / amountNodes) * 100);
+  }
+  
+  public int getColorFromNodeCollection() {
+    int gatheredProportion = this.getGatheredNodesProportion();
+    int baseColor = Math.round(map(gatheredProportion, 0, 100, 0, 33));
+    
+    if (gatheredProportion == 100 && this.peaceColor < (255 - 33)) {
+      this.peaceColor += 0.25;
+    }  else if (this.peaceColor > 0 && this.peaceColor < (255 - 34)) {
+      this.peaceColor -= 1;
+    }
+    int finalColor = baseColor + Math.round(this.peaceColor);
+    if (finalColor == 255 && this.nodeSize < 30) {
+      this.nodeSize += 1;
+    }
+    return finalColor;
   }
   
   // -------

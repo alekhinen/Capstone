@@ -7,6 +7,10 @@ public class OriginNode extends Node {
   boolean isReturning;
   PVector returnVelocity = new PVector();
   
+  boolean stopTracking = false;
+  boolean trackAttractor = false;
+  Attractor trackedAttractor;
+  
   final int baseOpacity = 128;
   int toOpacity = 128;
   int opacity = 128;
@@ -62,7 +66,25 @@ public class OriginNode extends Node {
       
       isReturning = velocityStopped;
     } else {
+      if (this.trackAttractor) {
+        if (!this.stopTracking) {
+          // Distance = Work / Force
+          float deltaX = this.trackedAttractor.x - this.x;
+          float deltaY = this.trackedAttractor.y - this.y;
+          
+          this.velocity.x = deltaX * 0.3; // note: adjustable param - damping (0.0 - 1.0)
+          this.velocity.y = deltaY * 0.3; // note: adjustable param - same thing
+        }
+        
+        if (this.trackedAttractor.dist(this) < this.trackedAttractor.radius / 2) {
+          this.stopTracking = true;
+        }
+      } else {
+        this.stopTracking = false;
+      }
+      
       super.update();
+      
       if (velocityStopped) {
         isReturning = true;
         

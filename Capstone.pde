@@ -53,7 +53,7 @@ ArrayList<User> dyingUsers;
 
 void setup() {
   
-  size(displayWidth, displayHeight, P3D);
+  fullScreen();
   frameRate(FRAME_RATE);
   stroke(0, 50);
   background(0);
@@ -162,7 +162,7 @@ void resetScreen() {
   }
   colorValue /= users.size();
   
-  fill(colorValue, 10);
+  fill(colorValue, 55);
   noStroke();
   rect(0,0,width,height);
 }

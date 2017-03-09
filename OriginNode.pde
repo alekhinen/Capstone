@@ -6,10 +6,7 @@ public class OriginNode extends Node {
   
   boolean isReturning;
   PVector returnVelocity = new PVector();
-  
-  boolean hasPriorNode = false;
-  OriginNode priorNode;
-  
+    
   boolean trackAttractor = false;
   Attractor trackedAttractor;
   
@@ -29,17 +26,6 @@ public class OriginNode extends Node {
     
     originX = theX;
     originY = theY;
-  }
-  
-  public OriginNode(float theX, float theY, OriginNode priorNode) {
-    x = theX;
-    y = theY;
-    
-    originX = theX;
-    originY = theY;
-    
-    this.priorNode = priorNode;
-    this.hasPriorNode = true;
   }
 
   public OriginNode(float theX, float theY, float theZ) {
@@ -91,20 +77,12 @@ public class OriginNode extends Node {
       }
       
       if (this.trackAttractor) {
-        // TODO: this came out like shit.
+        // TODO: this node should follow the attractor if it is not going too fast (or until some state is reached?).
         //float deltaX = this.trackedAttractor.x - this.x;
         //float deltaY = this.trackedAttractor.y - this.y;
         
         //this.velocity.x += Math.sqrt(deltaX);
         //this.velocity.y += Math.sqrt(deltaY);
-      }
-      
-      if (this.hasPriorNode && this.trackAttractor) {
-        float deltaX = this.x - this.priorNode.x; // TODO: can also use velocity.
-        float deltaY = this.y - this.priorNode.y;
-        
-        this.priorNode.x += deltaX / 2;
-        this.priorNode.y += deltaY / 2;
       }
     }
   }

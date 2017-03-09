@@ -78,11 +78,15 @@ class User {
     
     // grid size is a vector where x -> width, y -> height
     this.gridSize = new PVector(Math.round(random(1400, displayWidth)), 
-                                Math.round(random(300, Math.max(displayHeight - 200, 300))));
+                                Math.round(random(300, Math.max(displayHeight - 900, 300))));
     this.gridSize.x = this.gridSize.y;
     
-    xCount = Math.round(random(100, 201));
-    yCount = Math.round(random(20, 31));
+    // for lines.
+    xCount = Math.round(random(3, 7));
+    yCount = Math.round(random(30, 31));
+    // for particles
+    xCount = Math.round(random(21, 31));
+    yCount = Math.round(random(200, 301));
     
     // diamond generator (specifically to count the number of nodes needed).
     // todo: this should be refactored
@@ -333,7 +337,7 @@ class User {
   // --------------
   
   void draw() {
-    drawHands();
+    //drawHands();
     //drawLines();
     drawParticles();
     //drawDebug();
@@ -367,8 +371,12 @@ class User {
   }
   
   void drawLines() {
-    strokeWeight(1);
-    stroke(red(this.cChest), green(this.cChest), blue(this.cChest), 75);
+    strokeWeight(5);
+    this.cChest = color(red(this.cChest) + random(-15, 15), 
+                        green(this.cChest) + random(-15, 15), 
+                        blue(this.cChest) + random(-15, 15), 
+                        128);
+    stroke(this.cChest);
     
     int index = 0;
     int nodeMidHeight = yCount / 2;
@@ -396,6 +404,11 @@ class User {
   }
   
   void drawParticles() {
+    this.cChest = color(red(this.cChest) + random(-15, 15), 
+                        green(this.cChest) + random(-15, 15), 
+                        blue(this.cChest) + random(-15, 15), 
+                        200);
+    
     // draw each node
     for (OriginNode currentNode : this.nodes) {
       float colorMapping = map(currentNode.opacity, 128, 255, 0, 20);

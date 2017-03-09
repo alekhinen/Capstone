@@ -163,7 +163,7 @@ void resetScreen() {
   }
   colorValue /= users.size();
   
-  fill(colorValue, 55);
+  fill(colorValue, 0);
   noStroke();
   rect(0,0,width,height);
 }

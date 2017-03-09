@@ -6,7 +6,8 @@ public class OriginNode extends Node {
   
   boolean isReturning;
   PVector returnVelocity = new PVector();
-    
+  
+  boolean stopTracking = false;
   boolean trackAttractor = false;
   Attractor trackedAttractor;
   
@@ -65,7 +66,26 @@ public class OriginNode extends Node {
       
       isReturning = velocityStopped;
     } else {
+      if (this.trackAttractor) {
+        if (!this.stopTracking) {
+          // Distance = Work / Force
+          // TODO: this node should follow the attractor if it is not going too fast (or until some state is reached?).
+          float deltaX = this.trackedAttractor.x - this.x;
+          float deltaY = this.trackedAttractor.y - this.y;
+          
+          this.velocity.x = deltaX * 0.3;
+          this.velocity.y = deltaY * 0.3;
+        }
+        
+        if (this.trackedAttractor.dist(this) < this.trackedAttractor.radius / 2) {
+          this.stopTracking = true;
+        }
+      } else {
+        this.stopTracking = false;
+      }
+      
       super.update();
+      
       if (velocityStopped) {
         isReturning = true;
         
@@ -74,15 +94,6 @@ public class OriginNode extends Node {
         
         returnVelocity.x = deltaX * damping;
         returnVelocity.y = deltaY * damping;
-      }
-      
-      if (this.trackAttractor) {
-        // TODO: this node should follow the attractor if it is not going too fast (or until some state is reached?).
-        //float deltaX = this.trackedAttractor.x - this.x;
-        //float deltaY = this.trackedAttractor.y - this.y;
-        
-        //this.velocity.x += Math.sqrt(deltaX);
-        //this.velocity.y += Math.sqrt(deltaY);
       }
     }
   }

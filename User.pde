@@ -193,7 +193,7 @@ class User {
     
     // note: could be interesting to increase strength as hands get closer. 
     float handDist = (float) euclideanDistance(this.lHandPosn, this.rHandPosn);
-    this.attractorStrength = 2.5 - map(handDist, 0, 1080, 0.1, 2.4);
+    this.attractorStrength = 4 - map(handDist, 0, 1080, 0.1, 3.7);
     
     // update attractor positions.
     
@@ -244,8 +244,6 @@ class User {
         }
         currentNode.toOpacity = 255;
       } else if (chestAttractor.dist(currentNode) < chestAttractor.radius / 2) {
-        currentNode.trackAttractor = true;
-        currentNode.trackedAttractor = chestAttractor;
         currentlyGatheredNodes += 1;
         if (chestMoved) {
           currentNode.resetOpacity();
@@ -267,11 +265,7 @@ class User {
   void updateAttractors(KJoint lHand, KJoint rHand) {
     
     // determine if attractors moved
-    
-    double currentLeftDelta  = this.leftDelta;
-    double currentRightDelta = this.rightDelta;
-    double currentChestDelta = this.chestDelta;
-    
+        
     this.leftDelta  = euclideanDistance(this.lHandPosn, new PVector(leftAttractor.x, leftAttractor.y));
     this.rightDelta = euclideanDistance(this.rHandPosn, new PVector(rightAttractor.x, rightAttractor.y));
     this.chestDelta = euclideanDistance(this.chestPosn, new PVector(chestAttractor.x, chestAttractor.y));
@@ -279,13 +273,6 @@ class User {
     leftMoved  = leftDelta  > 10;
     rightMoved = rightDelta > 10;
     chestMoved = chestDelta > 10;
-    
-    // note: there's been a lot of intermittent spikes in value. so to make sure
-    //       that we aren't registering a spike we are keeping a top level value to
-    //       do a sort of high pass filter on the signal.
-    leftJerked  = leftDelta > 100 && Math.abs(currentLeftDelta - this.leftDelta) < 50;
-    rightJerked = rightDelta > 100 && Math.abs(currentRightDelta - this.rightDelta) < 50;
-    chestJerked = chestDelta > 100; // currently not used
     
     // update positions
     
@@ -300,37 +287,22 @@ class User {
     
     // update state and strength
     
-    if (leftJerked) {
-      // shoot the particles out if left hand jerked.
-      leftAttractor.strength = -5000;
-      leftAttractor.setMode(1);
+    if (lHand.getState() == KinectPV2.HandState_Closed) {
+      // spiral repulsor is mode 2
+      leftAttractor.strength = attractorStrength;
+      leftAttractor.setMode(2);
     } else {
-      if (lHand.getState() == KinectPV2.HandState_Closed) {
-        // spiral repulsor is mode 2
-        leftAttractor.strength = attractorStrength;
-        leftAttractor.setMode(2);
-      } else {
-        // attractor
-        leftAttractor.strength = attractorStrength; 
-        leftAttractor.setMode(1);
-      }
+      // attractor
+      leftAttractor.strength = attractorStrength; 
+      leftAttractor.setMode(1);
     }
     
-    if (rightJerked) {
-      // shoot the particles out if right hand jerked.
-      // TODO: maybe instead of shooting the particles out, we tell the particles
-      //       that are linked to stay linked (otherwise de-link.
-      rightAttractor.strength = -5000;
-      rightAttractor.setMode(1);
+    if (rHand.getState() == KinectPV2.HandState_Closed) {
+      // super-strong attractor
+      rightAttractor.strength = attractorStrength * 4; 
     } else {
-      rightAttractor.setMode(1);
-      if (rHand.getState() == KinectPV2.HandState_Closed) {
-        // super-strong attractor
-        rightAttractor.strength = attractorStrength * 4; 
-      } else {
-        // attractor
-        rightAttractor.strength = attractorStrength; 
-      }
+      // attractor
+      rightAttractor.strength = attractorStrength; 
     }
   }
   
@@ -410,7 +382,7 @@ class User {
     
     if (gatheredProportion == 100 && this.peaceColor < (255 - 33)) {
       this.peaceColor += 0.25;
-    }  else if (this.peaceColor > 0) {
+    }  else if (this.peaceColor > 0 && this.peaceColor < (255 - 34)) {
       this.peaceColor -= 1;
     }
     int finalColor = baseColor + Math.round(this.peaceColor);

@@ -156,6 +156,7 @@ void draw() {
 // ---------------------
 
 void resetScreen() {
+  // background color value.
   float colorValue = 0;
   for (User u : users) {
       colorValue += u.getColorFromNodeCollection();

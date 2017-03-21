@@ -182,7 +182,7 @@ class User {
 
     int z = getDepthFromJoint(chest);
     // have depth map to the size of the nodes.
-    this.nodeSize = Math.round(map(z, 0, 4500, 2, 20));
+    this.nodeSize = 17 - Math.round(map(z, 0, 4500, 0, 15));
     
     PVector mappedChest = mapDepthToScreen(chest);
     PVector mappedLeft  = mapDepthToScreen(lHand);
@@ -348,6 +348,7 @@ class User {
     stroke(red(this.cChest), 
                green(this.cChest), 
                blue(this.cChest), 100);
+    noFill();
     
     //int i = 0;
     //PVector previous = this.leftHandPositions.get(0); 
@@ -362,6 +363,7 @@ class User {
     //  i += 1;
     //}
     drawLine(this.leftHandPositions.toArray(new PVector[this.leftHandPositions.size()]), true);
+    drawLine(this.rightHandPositions.toArray(new PVector[this.rightHandPositions.size()]), true);
     
     noStroke();
   }
@@ -420,6 +422,7 @@ class User {
    */
   void drawDebug() {
     fill(255,0,0);
+    text(frameRate, 50, 50);
     text(Math.round(this.getAverageNodeVelocity() * 1000), 50, 70);
     
     if (this.gatheredNodes.size() > 0) {

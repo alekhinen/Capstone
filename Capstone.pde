@@ -146,9 +146,6 @@ void draw() {
     User u = users.get(i);
     osc.sendMessage(u, i);
   }
-
-  fill(255, 0, 0);
-  text(frameRate, 50, 50);
 }
 
 // ---------------------

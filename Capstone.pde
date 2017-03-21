@@ -159,7 +159,8 @@ void resetScreen() {
       colorValue += u.getColorFromNodeCollection();
   }
   colorValue /= users.size();
-  
+  // todo: set transparency to 0 and set mode to 3 when color value reaches 255.
+  //       and have user node colors change in between values of a color pallette.
   fill(colorValue, 55);
   noStroke();
   rect(0,0,width,height);

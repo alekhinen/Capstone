@@ -193,10 +193,12 @@ User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
   PVector mappedJoint = mapDepthToScreen(chest);
   PVector mappedLeft  = mapDepthToScreen(lHand);
   PVector mappedRight = mapDepthToScreen(rHand);
+  int mode = Math.round(random(0, 1));
   
   return new User(new PVector(mappedJoint.x, mappedJoint.y, z),
                   mappedLeft,
-                  mappedRight);
+                  mappedRight,
+                  mode);
 }
 
 // -------------

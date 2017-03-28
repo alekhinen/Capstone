@@ -288,7 +288,7 @@ class User {
    */
   void updatePreviousPositions() {
     // clear out all nodes past the max size.
-    int maxSize = 60;
+    int maxSize = 30;
     if (this.leftHandPositions.size() > maxSize) {
       this.leftHandPositions = new ArrayList<PVector>(this.leftHandPositions.subList(0, maxSize));
     }    
@@ -365,7 +365,7 @@ class User {
       return;
     }
     
-    strokeWeight(4);
+    strokeWeight(3);
     stroke(red(this.cChest), 
                green(this.cChest), 
                blue(this.cChest), 100);
@@ -494,7 +494,7 @@ class User {
     int baseColor = Math.round(map(gatheredProportion, 0, 100, 0, 33));
     
     if (gatheredProportion == 100 && this.peaceColor < (255 - 33)) {
-      this.peaceColor += 0.25;
+      this.peaceColor += 1;
     }  else if (this.peaceColor > 0 && this.peaceColor < (255 - 34)) {
       this.peaceColor -= 1;
     }

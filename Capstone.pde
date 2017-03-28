@@ -56,7 +56,7 @@ void setup() {
   fullScreen();
   frameRate(FRAME_RATE);
   stroke(0, 50);
-  background(0);
+  background(255);
 
   // initialize kinect stuff. 
   

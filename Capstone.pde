@@ -178,7 +178,10 @@ void clearTheDead() {
   int dyingIncrement = 0;
   while (dyingIncrement < dyingUsers.size()) {
     User u = dyingUsers.get(dyingIncrement);
-    if (u.currentFrame == 0.0) {
+    // if we reached the last frame for the dying user, remove them.
+    // if the dying user is drawing lines, we have some serious graphics performance issues
+    // so remove them immediately.
+    if (u.currentFrame == 0.0 || u.mode == 1) {
       dyingUsers.remove(dyingIncrement);
     } else {
       u.deathUpdate();

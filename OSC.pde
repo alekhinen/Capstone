@@ -53,6 +53,11 @@ class OSC {
     gatheredNodes.add(u.getGatheredNodesProportion());
     oscP5.send(gatheredNodes, myRemoteLocation);
     
+    // send the user's drawing mode
+    OscMessage drawingMode = new OscMessage(oscId + "drawingMode");
+    drawingMode.add(u.mode);
+    oscP5.send(drawingMode, myRemoteLocation);
+    
     // send burst (if burst)
     if (u.hasBurst) {
       OscMessage hasBurst = new OscMessage(oscId + "hasBurst");

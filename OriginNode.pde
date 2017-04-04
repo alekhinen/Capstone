@@ -72,8 +72,8 @@ public class OriginNode extends Node {
           float deltaX = this.trackedAttractor.x - this.x;
           float deltaY = this.trackedAttractor.y - this.y;
           
-          this.velocity.x = deltaX * 0.3; // note: adjustable param - damping (0.0 - 1.0)
-          this.velocity.y = deltaY * 0.3; // note: adjustable param - same thing
+          this.velocity.x = deltaX * 0.03; // note: adjustable param - damping (0.0 - 1.0)
+          this.velocity.y = deltaY * 0.03; // note: adjustable param - same thing
         }
         
         if (this.trackedAttractor.dist(this) < this.trackedAttractor.radius / 2) {

@@ -42,6 +42,8 @@ SonicColor [] sonicColors = {
 ArrayList<User> users;
 // users that walked off the screen, transitioning to their passing.
 ArrayList<User> dyingUsers;
+// the current drawing mode for the particle system.
+int currentMode = -1;
 
 // ================
 // Global Functions
@@ -56,7 +58,7 @@ void setup() {
   fullScreen();
   frameRate(FRAME_RATE);
   stroke(0, 50);
-  background(0);
+  background(255);
 
   // initialize kinect stuff. 
   
@@ -111,6 +113,8 @@ void draw() {
       dyingUsers.add(u);
     }
     users = new ArrayList<User>();
+    // if users leave, then reset the current drawing mode.
+    currentMode = -1;
   }
   
   for (int i = 0; i < skeletonArray.size(); i++) {
@@ -146,9 +150,6 @@ void draw() {
     User u = users.get(i);
     osc.sendMessage(u, i);
   }
-
-  fill(255, 0, 0);
-  text(frameRate, 50, 50);
 }
 
 // ---------------------
@@ -162,10 +163,11 @@ void resetScreen() {
       colorValue += u.getColorFromNodeCollection();
   }
   colorValue /= users.size();
-  
+  // todo: set transparency to 0 and set mode to 3 when color value reaches 255.
+  //       and have user node colors change in between values of a color pallette.
   fill(colorValue, 55);
   noStroke();
-  rect(0,0,width,height);
+  rect(0, 0, width, height);
 }
 
 /*
@@ -196,10 +198,18 @@ User generateUser(KJoint chest, KJoint lHand, KJoint rHand) {
   PVector mappedJoint = mapDepthToScreen(chest);
   PVector mappedLeft  = mapDepthToScreen(lHand);
   PVector mappedRight = mapDepthToScreen(rHand);
+  int mode = Math.round(random(0, 1));
+  
+  // if we have a current drawing mode, use that instead.
+  if (currentMode >= 0) {
+    mode = currentMode;
+  }
+  currentMode = mode;
   
   return new User(new PVector(mappedJoint.x, mappedJoint.y, z),
                   mappedLeft,
-                  mappedRight);
+                  mappedRight,
+                  mode);
 }
 
 // -------------

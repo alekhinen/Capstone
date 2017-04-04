@@ -60,13 +60,19 @@ class User {
   
   float peaceColor = 0;
   
+  // draw parameters
+  
+  // 0 == particles, 1 == lines
+  int mode = 0;
+  
   // -----------
   // Constructor
   // -----------
   
   User(PVector chestPosn, 
        PVector lHandPosn, 
-       PVector rHandPosn) {
+       PVector rHandPosn,
+       int mode) {
     this.cChest = color(Math.round(random(100, 255)), 
                         Math.round(random(100, 255)), 
                         Math.round(random(100, 255)), 
@@ -76,13 +82,20 @@ class User {
     this.lHandPosn  = lHandPosn;
     this.rHandPosn  = rHandPosn;
     
+    this.mode = mode;
+    
     // grid size is a vector where x -> width, y -> height
     this.gridSize = new PVector(Math.round(random(1400, displayWidth)), 
                                 Math.round(random(300, Math.max(displayHeight - 200, 300))));
     this.gridSize.x = this.gridSize.y;
     
-    xCount = Math.round(random(100, 201));
-    yCount = Math.round(random(20, 31));
+    if (this.mode == 0) {
+      xCount = Math.round(random(100, 201));
+      yCount = Math.round(random(20, 31));
+    } else {
+      xCount = Math.round(random(50, 101));
+      yCount = Math.round(random(10, 15));
+    }
     
     // diamond generator (specifically to count the number of nodes needed).
     // todo: this should be refactored
@@ -148,6 +161,9 @@ class User {
    */
   void deathUpdate() {
     
+    this.leftHandPositions.clear();
+    this.rightHandPositions.clear();
+    
     // update transitioners
     
     if (this.currentFrame > 0 && this.isDying) {
@@ -182,7 +198,9 @@ class User {
 
     int z = getDepthFromJoint(chest);
     // have depth map to the size of the nodes.
-    this.nodeSize = Math.round(map(z, 0, 4500, 2, 20));
+    int newNodeSize = 17 - Math.round(map(z, 0, 4500, 0, 15));
+    // smooth out the signal.
+    this.nodeSize = (newNodeSize + this.nodeSize) / 2;
     
     PVector mappedChest = mapDepthToScreen(chest);
     PVector mappedLeft  = mapDepthToScreen(lHand);
@@ -270,7 +288,7 @@ class User {
    */
   void updatePreviousPositions() {
     // clear out all nodes past the max size.
-    int maxSize = 60;
+    int maxSize = 30;
     if (this.leftHandPositions.size() > maxSize) {
       this.leftHandPositions = new ArrayList<PVector>(this.leftHandPositions.subList(0, maxSize));
     }    
@@ -334,9 +352,12 @@ class User {
   
   void draw() {
     drawHands();
-    //drawLines();
-    drawParticles();
-    //drawDebug();
+    
+    if (this.mode == 0) {
+      drawParticles();
+    } else {
+      drawLines();
+    }
   }
   
   void drawHands() {
@@ -344,10 +365,11 @@ class User {
       return;
     }
     
-    strokeWeight(4);
+    strokeWeight(3);
     stroke(red(this.cChest), 
                green(this.cChest), 
                blue(this.cChest), 100);
+    noFill();
     
     //int i = 0;
     //PVector previous = this.leftHandPositions.get(0); 
@@ -362,6 +384,7 @@ class User {
     //  i += 1;
     //}
     drawLine(this.leftHandPositions.toArray(new PVector[this.leftHandPositions.size()]), true);
+    drawLine(this.rightHandPositions.toArray(new PVector[this.rightHandPositions.size()]), true);
     
     noStroke();
   }
@@ -420,6 +443,7 @@ class User {
    */
   void drawDebug() {
     fill(255,0,0);
+    text(frameRate, 50, 50);
     text(Math.round(this.getAverageNodeVelocity() * 1000), 50, 70);
     
     if (this.gatheredNodes.size() > 0) {
@@ -470,7 +494,7 @@ class User {
     int baseColor = Math.round(map(gatheredProportion, 0, 100, 0, 33));
     
     if (gatheredProportion == 100 && this.peaceColor < (255 - 33)) {
-      this.peaceColor += 0.25;
+      this.peaceColor += 1;
     }  else if (this.peaceColor > 0 && this.peaceColor < (255 - 34)) {
       this.peaceColor -= 1;
     }

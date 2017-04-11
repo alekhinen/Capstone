@@ -58,13 +58,11 @@ class OSC {
     drawingMode.add(u.mode);
     oscP5.send(drawingMode, myRemoteLocation);
     
-    // send burst (if burst)
-    if (u.hasBurst) {
-      OscMessage hasBurst = new OscMessage(oscId + "hasBurst");
-      hasBurst.add("burst!!!");
-      oscP5.send(hasBurst, myRemoteLocation);
-    }
-    
+    // send the global color value (0 - 255)
+    OscMessage colorMessage = new OscMessage(oscId + "colorValue");
+    colorMessage.add(colorValue);
+    oscP5.send(colorMessage, myRemoteLocation);
+       
   }
   
   /** 

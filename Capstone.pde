@@ -44,6 +44,8 @@ ArrayList<User> users;
 ArrayList<User> dyingUsers;
 // the current drawing mode for the particle system.
 int currentMode = -1;
+// background color value.
+float colorValue = 0;
 
 // ================
 // Global Functions
@@ -157,8 +159,8 @@ void draw() {
 // ---------------------
 
 void resetScreen() {
-  // background color value.
-  float colorValue = 0;
+  // reset background color value.
+  colorValue = 0;
   for (User u : users) {
       colorValue += u.getColorFromNodeCollection();
   }

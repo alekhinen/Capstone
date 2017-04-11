@@ -18,7 +18,7 @@ class OSC {
   public OSC() {
     /* start oscP5, listening for incoming messages at port 8000 */
     oscP5 = new OscP5(this,12000);
-    myRemoteLocation = new NetAddress("192.168.1.3", 8000);
+    myRemoteLocation = new NetAddress("127.0.0.1", 8000);
   }
   
   // ---------
@@ -52,6 +52,11 @@ class OSC {
     OscMessage gatheredNodes = new OscMessage(oscId + "gatheredNodes");
     gatheredNodes.add(u.getGatheredNodesProportion());
     oscP5.send(gatheredNodes, myRemoteLocation);
+    
+    // send the user's drawing mode
+    OscMessage drawingMode = new OscMessage(oscId + "drawingMode");
+    drawingMode.add(u.mode);
+    oscP5.send(drawingMode, myRemoteLocation);
     
     // send burst (if burst)
     if (u.hasBurst) {
